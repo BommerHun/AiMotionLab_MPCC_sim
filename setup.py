@@ -13,9 +13,6 @@ class InstallCommand(_install):
 
 install_requires = ['glfw','matplotlib','mujoco','numpy','PyOpenGL','scipy','motioncapture==1.0a2','sympy','ffmpeg-python']
 
-if os.name=="nt":
-    install_requires.append("windows-curses")
-
 setup(name='aimotionlab_virtual',
       version='1.0.0',
       packages=find_packages(),
