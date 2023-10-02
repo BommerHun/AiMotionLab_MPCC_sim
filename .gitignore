@@ -1,4 +1,6 @@
 video_capture
+test.py
+assets/
 
 __pycache__/
 *.py[cod]
