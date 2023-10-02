@@ -19,7 +19,4 @@ if os.name=="nt":
 setup(name='aimotionlab_virtual',
       version='1.0.0',
       packages=find_packages(),
-      install_requires=install_requires,
-      cmdclass={
-        'install': InstallCommand,
-    })
+      install_requires=install_requires)
