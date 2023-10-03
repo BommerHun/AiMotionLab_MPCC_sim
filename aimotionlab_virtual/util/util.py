@@ -140,29 +140,3 @@ def plot_payload_and_airflow_volume(payload, airflow_sampler, payload_color: str
     ax.axis("equal")
 
     plt.show()
-
-
-def set_path_for_assets(asset_paths):
-
-    directory=asset_paths+"/xml_models/"
-
-    print(directory)
-    # Define the regular expression pattern to find ".." symbols
-    pattern = r'\.\.'
-
-    # Iterate through XML files in the directory
-    for filename in os.listdir(directory):
-        if filename.endswith('.xml'):
-            filepath = os.path.join(directory, filename)
-
-            # Read the XML file
-            with open(filepath, 'r') as file:
-                xml_content = file.read()
-
-            # Replace all occurrences of ".." symbols with a replacement string (e.g., "")
-            modified_content = re.sub(pattern, asset_paths, xml_content)
-
-            # Write the modified content back to the same file
-            with open(filepath, 'w') as file:
-                file.write(modified_content)
-        print(filename)

@@ -69,6 +69,7 @@ class Car(MovingObject):
         self.sensor_velocimeter = self.data.sensor(self.name_in_xml + "_velocimeter").data
         self.sensor_posimeter = self.data.sensor(self.name_in_xml + "_posimeter").data
         self.sensor_orimeter = self.data.sensor(self.name_in_xml + "_orimeter").data
+        self.sensor_accelerometer = self.data.sensor(self.name_in_xml + "_accelerometer").data
 
         roll, pitch, yaw = mujoco_helper.euler_from_quaternion(*self.sensor_orimeter)
 
@@ -79,7 +80,9 @@ class Car(MovingObject):
             "head_angle" : yaw,
             "long_vel" : self.sensor_velocimeter[0],
             "lat_vel" : self.sensor_velocimeter[1],
-            "yaw_rate" : self.sensor_gyro[2]
+            "yaw_rate" : self.sensor_gyro[2],
+            "long_acc": self.sensor_accelerometer[0],
+            "lat_acc": self.sensor_accelerometer[1]
         }
 
         self.steer_angle = 0
@@ -124,6 +127,8 @@ class Car(MovingObject):
         self.state["long_vel"] = self.sensor_velocimeter[0]
         self.state["lat_vel"] = self.sensor_velocimeter[1]
         self.state["yaw_rate"] = self.sensor_gyro[2]
+        self.state["long_acc"] = self.sensor_accelerometer[0]
+        self.state["lat_acc"] = self.sensor_accelerometer[1]
         return self.state
     
 

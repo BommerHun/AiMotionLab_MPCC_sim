@@ -4,7 +4,7 @@ import re
 
 def set_path_for_assets(asset_path):
 
-    directory=asset_path+"/xml_models/"
+    directory = asset_path+"/xml_models/"
 
     print(directory)
     # Define the regular expression pattern to find ".." symbols
