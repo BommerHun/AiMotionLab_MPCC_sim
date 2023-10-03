@@ -130,8 +130,6 @@ class Car(MovingObject):
         self.state["long_vel"] = self.sensor_velocimeter[0]
         self.state["lat_vel"] = self.sensor_velocimeter[1]
         self.state["yaw_rate"] = self.sensor_gyro[2]
-        self.state["long_acc"] = self.sensor_accelerometer[0]
-        self.state["lat_acc"] = self.sensor_accelerometer[1]
         return self.state
     
 
