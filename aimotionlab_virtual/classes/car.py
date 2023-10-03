@@ -80,7 +80,10 @@ class Car(MovingObject):
             "head_angle" : yaw,
             "long_vel" : self.sensor_velocimeter[0],
             "lat_vel" : self.sensor_velocimeter[1],
-            "yaw_rate" : self.sensor_gyro[2],
+            "yaw_rate" : self.sensor_gyro[2]
+        }
+
+        self.acceleration_data= {
             "long_acc": self.sensor_accelerometer[0],
             "lat_acc": self.sensor_accelerometer[1]
         }
@@ -131,6 +134,12 @@ class Car(MovingObject):
         self.state["lat_acc"] = self.sensor_accelerometer[1]
         return self.state
     
+
+    def get_acceleration(self):
+        self.acceleration_data["long_acc"] = self.sensor_accelerometer[0]
+        self.acceleration_data["lat_acc"] = self.sensor_accelerometer[1]
+    
+        return self.acceleration_data
 
 
     def calc_torque(self):
@@ -310,7 +319,6 @@ class Fleet1Tenth(Car):
                 self.set_ctrl(ctrl)
     
     
-
 
 class CarMocap(MocapObject):
 
