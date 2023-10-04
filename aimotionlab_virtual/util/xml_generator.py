@@ -632,13 +632,13 @@ class SceneXmlGenerator:
         ET.SubElement(hook, "geom", type="capsule", pos="0 -0.02561 0.09061", euler="2.74889 0 0", size="0.004 0.01378", mass=hook_mass)
 
 
-    def add_car(self, pos, quat, color, is_virtual, has_rod=False, type="fleet1tenth"):
+    def add_car(self, pos, quat, color, is_virtual, has_rod=False, type="fleet1tenth", **kwargs):
 
         name = None
 
         if is_virtual and type == "fleet1tenth":
             name = "Fleet1Tenth_" + str(self._virtfleet1tenth_cntr)
-            self._add_fleet1tenth(pos, quat, name, color, has_rod)
+            self._add_fleet1tenth(pos, quat, name, color, has_rod, **kwargs)
             self._virtfleet1tenth_cntr += 1
         
         elif not is_virtual and type == "fleet1tenth":
@@ -652,15 +652,24 @@ class SceneXmlGenerator:
         
         return name
     
-    def _add_fleet1tenth(self, pos, quat, name, color, has_rod):
+    def _add_fleet1tenth(self, pos, quat, name, color, has_rod, **kwargs):
+        
+        wheel_width = kwargs["wheel_width"] if "wheel_width" in kwargs else F1T_PROP.WHEEL_WIDTH.value
+        wheel_radius = kwargs["wheel_radius"] if "wheel_radius" in kwargs else F1T_PROP.WHEEL_RADIUS.value
+        
+        wheel_size = wheel_radius + " "+ wheel_width
+        
         site_name = name + SITE_NAME_END
 
         posxyz = str.split(pos)
-        pos = posxyz[0] + " " + posxyz[1] + " " + F1T_PROP.WHEEL_RADIUS.value
+        pos = posxyz[0] + " " + posxyz[1] + " " + wheel_radius
         
         car = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat)
 
-        ET.SubElement(car, "inertial", pos="0 0 0", diaginertia=".05 .05 .08", mass="3.0")
+        mass = kwargs["mass"] if "mass" in kwargs else 3.0
+        inertia = kwargs["inertia"] if "intertia" in kwargs else ".05 0.5 .08"
+
+        ET.SubElement(car, "inertial", pos="0 0 0", diaginertia=inertia, mass=mass)
         ET.SubElement(car, "joint", name=name, type="free")
         ET.SubElement(car, "site", name=site_name, pos="0 0 0")
 
@@ -698,7 +707,7 @@ class SceneXmlGenerator:
 
         ET.SubElement(wheelrr, "geom", name=name + "_wheelrr", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="-0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
-        friction = "2.5 2.5 .009 .0001 .0001"
+        friction=kwargs["friction"] if "friction" in kwargs else "2.5 2.5 .009 .0001 .0001"
 
         ET.SubElement(self.contact, "pair", geom1=name + "_wheelfl", geom2="roundabout", condim="6", friction=friction)
         ET.SubElement(self.contact, "pair", geom1=name + "_wheelfr", geom2="roundabout", condim="6", friction=friction)
