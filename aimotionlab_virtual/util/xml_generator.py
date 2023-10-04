@@ -643,7 +643,7 @@ class SceneXmlGenerator:
         
         elif not is_virtual and type == "fleet1tenth":
             name = "CarMocap_fleet1tenth_" + str(self._realfleet1tenth_cntr)
-            self._add_mocap_fleet1tenth(pos, quat, name, color, has_rod)
+            self._add_mocap_fleet1tenth(pos, quat, name, color, has_rod, **kwargs)
             self._realfleet1tenth_cntr += 1
         
         else:
@@ -666,8 +666,8 @@ class SceneXmlGenerator:
         
         car = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat)
 
-        mass = kwargs["mass"] if "mass" in kwargs else 3.0
-        inertia = kwargs["inertia"] if "intertia" in kwargs else ".05 0.5 .08"
+        mass = kwargs["mass"] if "mass" in kwargs else "3.0"
+        inertia = kwargs["inertia"] if "intertia" in kwargs else ".05 .05 .08"
 
         ET.SubElement(car, "inertial", pos="0 0 0", diaginertia=inertia, mass=mass)
         ET.SubElement(car, "joint", name=name, type="free")
@@ -689,23 +689,23 @@ class SceneXmlGenerator:
         ET.SubElement(wheelfl, "joint", name=name + "_wheelfl_steer", type="hinge", pos="0.16113 .10016 0", limited="true", frictionloss=fric_steer, damping=damp_steer, armature=armature_steer, range=steer_range, axis="0 0 1")
         ET.SubElement(wheelfl, "joint", name=name + "_wheelfl", type="hinge", pos="0.16113 .122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelfl, "geom", name=name + "_wheelfl", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelfl, "geom", name=name + "_wheelfl", type="cylinder", size=wheel_size, pos="0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelrl = ET.SubElement(car, "body", name=name + "_wheelrl" )
         ET.SubElement(wheelrl, "joint", name=name + "_wheelrl", type="hinge", pos="-0.16113 .122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelrl, "geom", name=name + "_wheelrl", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="-0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelrl, "geom", name=name + "_wheelrl", type="cylinder", size=wheel_size, pos="-0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelfr = ET.SubElement(car, "body", name=name + "_wheelfr" )
         ET.SubElement(wheelfr, "joint", name=name + "_wheelfr_steer", type="hinge", pos="0.16113 -.10016 0", limited="true", frictionloss=fric_steer, damping=damp_steer, armature=armature_steer, range=steer_range, axis="0 0 1")
         ET.SubElement(wheelfr, "joint", name=name + "_wheelfr", type="hinge", pos="0.16113 -.122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelfr, "geom", name=name + "_wheelfr", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelfr, "geom", name=name + "_wheelfr", type="cylinder", size=wheel_size, pos="0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelrr = ET.SubElement(car, "body", name=name + "_wheelrr" )
         ET.SubElement(wheelrr, "joint", name=name + "_wheelrr", type="hinge", pos="-0.16113 -.122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelrr, "geom", name=name + "_wheelrr", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="-0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelrr, "geom", name=name + "_wheelrr", type="cylinder", size=wheel_size, pos="-0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         friction=kwargs["friction"] if "friction" in kwargs else "2.5 2.5 .009 .0001 .0001"
 
@@ -730,22 +730,27 @@ class SceneXmlGenerator:
         ET.SubElement(self.sensor, "framequat", objtype="site", objname=site_name, name=name + "_orimeter")
         ET.SubElement(self.sensor, "accelerometer", site=site_name, name=name + "_accelerometer")
 
-    def _add_mocap_fleet1tenth(self, pos, quat, name, color, has_rod):
+    def _add_mocap_fleet1tenth(self, pos, quat, name, color, has_rod, **kwargs):
+
+        wheel_width = kwargs["wheel_width"] if "wheel_width" in kwargs else F1T_PROP.WHEEL_WIDTH.value
+        wheel_radius = kwargs["wheel_radius"] if "wheel_radius" in kwargs else F1T_PROP.WHEEL_RADIUS.value
+        
+        wheel_size = wheel_radius + " "+ wheel_width
 
         posxyz = str.split(pos)
-        pos = posxyz[0] + " " + posxyz[1] + " " + F1T_PROP.WHEEL_RADIUS.value
+        pos = posxyz[0] + " " + posxyz[1] + " " + wheel_radius
         
         car = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat, mocap="true")
 
         self._add_fleet1tenth_body(car, name, color, has_rod)
 
-        ET.SubElement(car, "geom", name=name + "_wheelfl", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="0.16113 .122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
+        ET.SubElement(car, "geom", name=name + "_wheelfl", type="cylinder", size=wheel_size, pos="0.16113 .122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
 
-        ET.SubElement(car, "geom", name=name + "_wheelrl", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="-0.16113 .122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
+        ET.SubElement(car, "geom", name=name + "_wheelrl", type="cylinder", size=wheel_size, pos="-0.16113 .122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
 
-        ET.SubElement(car, "geom", name=name + "_wheelfr", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="0.16113 -.122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
+        ET.SubElement(car, "geom", name=name + "_wheelfr", type="cylinder", size=wheel_size, pos="0.16113 -.122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
 
-        ET.SubElement(car, "geom", name=name + "_wheelrr", type="cylinder", size=F1T_PROP.WHEEL_SIZE.value, pos="-0.16113 -.122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
+        ET.SubElement(car, "geom", name=name + "_wheelrr", type="cylinder", size=wheel_size, pos="-0.16113 -.122385 0", rgba="0.1 0.1 0.1 1.0", euler="1.571 0 0")
 
     
     def _add_fleet1tenth_body(self, car, name, color, has_rod):
