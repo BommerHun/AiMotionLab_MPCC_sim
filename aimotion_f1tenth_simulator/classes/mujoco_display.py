@@ -9,13 +9,12 @@ import glfw
 import numpy as np
 import time
 import threading
-from aimotionlab_virtual.util import mujoco_helper
-from aimotionlab_virtual.gui.vehicle_name_gui import VehicleNameGui
+from aimotion_f1tenth_simulator.util import mujoco_helper
+from aimotion_f1tenth_simulator.gui.vehicle_name_gui import VehicleNameGui
 import scipy.signal
-from aimotionlab_virtual.util.mujoco_helper import LiveLFilter
-from aimotionlab_virtual.classes.moving_object import MocapObject, MovingObject
+from aimotion_f1tenth_simulator.util.mujoco_helper import LiveLFilter
+from aimotion_f1tenth_simulator.classes.moving_object import MocapObject, MovingObject
 import ffmpeg
-import motioncapture
 
 MAX_GEOM = 200
 INIT_WWIDTH = 1536
@@ -73,11 +72,6 @@ class Display:
         print(f"az xml: {xml_file_name}")
         self.load_model(xml_file_name)
 
-        
-        # Connect to optitrack
-        if connect_to_optitrack:
-            self.mc = motioncapture.MotionCaptureOptitrack(OPTITRACK_IP)
-            print("[Display] Connected to Optitrack")
 
         self.t1 = time.time()
 
@@ -498,12 +492,6 @@ class Display:
     
     def reset_title(self):
         glfw.set_window_title(self.window, self.title0)
-
-
-    def connect_to_Optitrack(self):
-        self.connect_to_optitrack = True
-        self.mc = motioncapture.MotionCaptureOptitrack(OPTITRACK_IP)
-        print("[Display] Connected to Optitrack")   
 
 
     def change_cam(self):

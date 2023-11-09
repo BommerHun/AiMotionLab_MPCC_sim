@@ -1,6 +1,6 @@
 from typing import Union
-from aimotionlab_virtual.classes.trajectory_base import TrajectoryBase
-from aimotionlab_virtual.classes.controller_base import ControllerBase
+from aimotion_f1tenth_simulator.classes.trajectory_base import TrajectoryBase
+from aimotion_f1tenth_simulator.classes.controller_base import ControllerBase
 import numpy as np
 from scipy.interpolate import splrep, splprep, splev
 import matplotlib.pyplot as plt

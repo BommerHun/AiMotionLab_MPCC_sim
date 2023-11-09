@@ -2,11 +2,11 @@ import time
 import mujoco
 import glfw
 import time
-from aimotionlab_virtual.util import mujoco_helper
-from aimotionlab_virtual.util.util import sync
-from aimotionlab_virtual.classes.mujoco_display import Display
-from aimotionlab_virtual.classes.moving_object import MocapObject
-from aimotionlab_virtual.classes.object_parser import parseMovingObjects, parseMocapObjects
+from aimotion_f1tenth_simulator.util import mujoco_helper
+from aimotion_f1tenth_simulator.util.util import sync
+from aimotion_f1tenth_simulator.classes.mujoco_display import Display
+from aimotion_f1tenth_simulator.classes.moving_object import MocapObject
+from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects, parseMocapObjects
 
 
 class ActiveSimulator(Display):

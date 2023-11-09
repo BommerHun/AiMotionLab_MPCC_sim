@@ -1,9 +1,9 @@
 import os
-from aimotionlab_virtual.classes.active_simulation import ActiveSimulator
+from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 import tkinter
 from tkinter import filedialog
 
-from aimotionlab_virtual.classes.object_parser import parseMovingObjects, parseMocapObjects
+from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects, parseMocapObjects
 
 
 # open the base

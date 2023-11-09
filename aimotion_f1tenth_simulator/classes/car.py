@@ -1,11 +1,11 @@
 import mujoco
 import numpy as np
-import aimotionlab_virtual.util.mujoco_helper as mh
+import aimotion_f1tenth_simulator.util.mujoco_helper as mh
 import math
 from enum import Enum
-from aimotionlab_virtual.classes.moving_object import MovingObject, MocapObject
+from aimotion_f1tenth_simulator.classes.moving_object import MovingObject, MocapObject
 import os
-from aimotionlab_virtual.util import mujoco_helper
+from aimotion_f1tenth_simulator.util import mujoco_helper
 
 class F1T_PROP(Enum):
     WHEEL_RADIUS = ".052388"

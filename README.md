@@ -1,15 +1,23 @@
-# Virtual 3D model of AIMotion-Lab and simulation with MuJoCo engine - Lightweight version
+# aimotion-f1tenth-simulator
 
-The documentation can be accessed [here](https://github.com/AIMotionLab-SZTAKI/Mujoco-Simulator/wiki).
+MuJoCo simulation environment for F1TENTh vehicles, based on the [AIMotionLab-Virtual package](https://github.com/AIMotionLab-SZTAKI/AIMotionLab-Virtual)
 
 ## Installation
-1. Create and activate a virtual environment
-
-2. Install libraries with pip
+Clone the repository:
 ```
+$ git clone https://github.com/flochkristof/aimotion-f1tenth-simulator.git
+```
+Create a virtual environment and install the package:
+```
+$ cd aimotion-f1tenth-simulator
+$ python -m venv venv
 $ pip install -e .
 ```
-3. Configure the asset path for further usage
+Windows users also need to install curses:
 ```
-$ python aimotionlab_virtual/util/configure_asset_path.py
+$ pip install windows-curses
+```
+To use the non-default asset (XML models, meshes, etc.) path run
+```
+$ configure_asset_path <path_to_assets>
 ```

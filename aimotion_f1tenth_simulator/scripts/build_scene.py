@@ -1,12 +1,12 @@
 import os
 from util import xml_generator
-from aimotionlab_virtual.classes.active_simulation import ActiveSimulator
-from aimotionlab_virtual.gui.building_input_gui import BuildingInputGui
-from aimotionlab_virtual.gui.vehicle_input_gui import VehicleInputGui
-from aimotionlab_virtual.gui.payload_input_gui import PayloadInputGui
-from aimotionlab_virtual.classes.payload import PAYLOAD_TYPES
-from aimotionlab_virtual.classes.object_parser import parseMovingObjects, parseMocapObjects
-from aimotionlab_virtual.classes.drone import DRONE_TYPES
+from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
+from aimotion_f1tenth_simulator.gui.building_input_gui import BuildingInputGui
+from aimotion_f1tenth_simulator.gui.vehicle_input_gui import VehicleInputGui
+from aimotion_f1tenth_simulator.gui.payload_input_gui import PayloadInputGui
+from aimotion_f1tenth_simulator.classes.payload import PAYLOAD_TYPES
+from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects, parseMocapObjects
+from aimotion_f1tenth_simulator.classes.drone import DRONE_TYPES
 
 
 # open the base on which we'll build

@@ -1,9 +1,7 @@
 import mujoco
-from aimotionlab_virtual.util import mujoco_helper
-from aimotionlab_virtual.classes.car import Fleet1Tenth, CarMocap
-from aimotionlab_virtual.classes.drone import Crazyflie, Bumblebee, BumblebeeHooked, DroneMocap, DroneMocapHooked, HookMocap
-from aimotionlab_virtual.classes.payload import BoxPayload, TeardropPayload, PayloadMocap
-from aimotionlab_virtual.classes.bicycle import Bicycle
+from aimotion_f1tenth_simulator.util import mujoco_helper
+from aimotion_f1tenth_simulator.classes.car import Fleet1Tenth, CarMocap
+from aimotion_f1tenth_simulator.classes.bicycle import Bicycle
 
 
 def parseMovingObjects(data: mujoco.MjData, model: mujoco.MjModel):

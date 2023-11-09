@@ -1,5 +1,5 @@
 import mujoco
-from aimotionlab_virtual.classes.moving_object import MovingObject
+from aimotion_f1tenth_simulator.classes.moving_object import MovingObject
 
 class Bicycle(MovingObject):
 
@@ -19,7 +19,7 @@ class Bicycle(MovingObject):
             self.ctrl[0] = ctrl
 
 
-from aimotionlab_virtual.classes.controller_base import ControllerBase
+from aimotion_f1tenth_simulator.classes.controller_base import ControllerBase
 
 class BicycleController(ControllerBase):
 

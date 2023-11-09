@@ -15,14 +15,6 @@ class ControllerBase:
         raise NotImplementedError("compute_control method must be implemented")
 
 
-class DummyDroneController(ControllerBase):
-
-    def __init__(self, mass, inertia, gravity):
-        super().__init__(mass, inertia, gravity)
-
-    
-    def compute_control(self, state, setpoint, time) -> np.array:
-        return np.array((0, 0, 0, 0))
 
 class DummyCarController(ControllerBase):
 

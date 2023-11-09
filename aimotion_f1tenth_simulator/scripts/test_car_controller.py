@@ -1,18 +1,18 @@
 import os
 
-from aimotionlab_virtual.classes.active_simulation import ActiveSimulator
+from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 
-from aimotionlab_virtual.util import xml_generator
+from aimotion_f1tenth_simulator.util import xml_generator
 
-from aimotionlab_virtual.classes.car import Car
+from aimotion_f1tenth_simulator.classes.car import Car
 
-from aimotionlab_virtual.classes.car_classes import CarTrajectory, CarLPVController
-from aimotionlab_virtual.util import mujoco_helper, carHeading2quaternion
+from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPVController
+from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aimotionlab_virtual.classes.object_parser import parseMovingObjects
+from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 
 
 RED_COLOR = "0.85 0.2 0.2 1.0"
