@@ -1,6 +1,8 @@
 video_capture
 test.py
-assets/
+
+.DS_Store
+
 
 __pycache__/
 *.py[cod]
