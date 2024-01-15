@@ -295,6 +295,11 @@ class Fleet1Tenth(Car):
         self.C_m1 = 65
         self.C_m2 = 3.3
         self.C_m3 = 1.05
+
+    def set_drivetrain_parameters(self, C_m1, C_m2, C_m3):
+        self.C_m1 = C_m1
+        self.C_m2 = C_m2
+        self.C_m3 = C_m3
     
 
     def update(self, i, control_step):

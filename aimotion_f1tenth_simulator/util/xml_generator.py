@@ -234,7 +234,10 @@ class SceneXmlGenerator:
         wheel_width = kwargs["wheel_width"] if "wheel_width" in kwargs else F1T_PROP.WHEEL_WIDTH.value
         wheel_radius = kwargs["wheel_radius"] if "wheel_radius" in kwargs else F1T_PROP.WHEEL_RADIUS.value
         
-        wheel_size = wheel_radius + " "+ wheel_width
+        print(wheel_radius)
+        print(wheel_width)
+
+        wheel_size = wheel_radius + " " + wheel_width
         
         site_name = name + SITE_NAME_END
 
