@@ -6,5 +6,4 @@ install_requires = ['glfw','matplotlib','mujoco','numpy','PyOpenGL','scipy','sym
 setup(name='aimotion_f1tenth_simulator',
       version='1.0.0',
       packages=find_packages(),
-      install_requires=install_requires,
-      entry_points = {'console_scripts': ['configure_asset_path=aimotion_f1tenth_simulator.util.configure_asset_path:main']})
+      install_requires=install_requires)

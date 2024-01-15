@@ -17,7 +17,5 @@ Windows users also need to install curses:
 ```
 $ pip install windows-curses
 ```
-To use the non-default asset (XML models, meshes, etc.) path run
-```
-$ configure_asset_path <path_to_assets>
-```
+## Usage
+See `examples/example_trajectory_execution.py` for a detailed example script. 
