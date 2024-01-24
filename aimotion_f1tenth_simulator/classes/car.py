@@ -148,6 +148,7 @@ class Car(MovingObject):
         #self.v_long = math.sqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]))
 
         self.v_long = v[0]
+        
 
         return (self.C_m1 * d) - (self.C_m2 * self.v_long) - (self.C_m3 * np.sign(self.v_long))
         #self.torque = self.clamp(self.torque, -.2, .2)
@@ -300,9 +301,9 @@ class Fleet1Tenth(Car):
         if "C_m1" in kwargs:
             self.C_m1 = kwargs["C_m1"]
         if "C_m2" in kwargs:
-            self.C_m1 = kwargs["C_m2"]
+            self.C_m2 = kwargs["C_m2"]
         if "C_m3" in kwargs:
-            self.C_m1 = kwargs["C_m3"]
+            self.C_m3 = kwargs["C_m3"]
     
 
     def update(self, i, control_step):

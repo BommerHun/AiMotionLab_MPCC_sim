@@ -3,19 +3,23 @@ from aimotion_f1tenth_simulator.classes.trajectory_base import TrajectoryBase
 from aimotion_f1tenth_simulator.classes.controller_base import ControllerBase
 import numpy as np
 from scipy.interpolate import splrep, splprep, splev
+from scipy.integrate import quad
 import matplotlib.pyplot as plt
 
 
 
 class CarTrajectory(TrajectoryBase):
-    def __init__(self):
+    def __init__(self) -> None:
         """Class implementation of BSpline-based trajectories for autonomous ground vehicles
         """
         super().__init__()
 
-        self._tck = None # BSpline vector knots/coeffs/degree
-        self.s_bounds = None # path parameter vector
-        self.s=None # running path parameter
+        self.output = {}
+        self.pos_tck = None
+        self.evol_tck = None
+        self.t_end = None
+        self.length = None
+
 
 
     def build_from_points_const_speed(self, path_points: np.ndarray, path_smoothing: float, path_degree: int, const_speed: float):
@@ -30,55 +34,40 @@ class CarTrajectory(TrajectoryBase):
         x_points = path_points[:, 0].tolist()
         y_points = path_points[:, 1].tolist()
 
-        if (
-            path_points[0, 0] == path_points[-1, 0]
-            and path_points[0, 1] == path_points[-1, 1]
-        ):
-            tck, *rest = splprep([x_points, y_points], k=3, s=path_smoothing)  # closed
-        elif len(x_points):
-            tck, *rest = splprep([x_points, y_points], k=1, s=path_smoothing)  # line
-        else:
-            tck, *rest = splprep([x_points, y_points], k=2, s=path_smoothing)  # curve
+        # fit spline and evaluate
+        tck, u, *_ = splprep([x_points, y_points], k=path_degree, s=path_smoothing)
+        XY=splev(u, tck)
 
-        u = np.arange(0, 1.001, 0.001)
-        path = splev(u, tck)
+        # calculate arc length
+        def integrand(x):
+            dx, dy = splev(x, tck, der=1)
+            return np.sqrt(dx**2 + dy**2)
+        self.length, _ = quad(integrand, u[0], u[-1])
 
-        (X, Y) = path
-        s = np.cumsum(np.sqrt(np.sum(np.diff(np.array((X, Y)), axis=1) ** 2, axis=0)))
+        # build spline for the path parameter
+        self.pos_tck, _, *_ = splprep(XY, k=path_degree, s=0, u=np.linspace(0, self.length, len(XY[0])))
 
-        par = np.linspace(0, s[-1], 1001)
-        par = np.reshape(par, par.size)
+        # build constant speed profile
+        self.t_end= self.length / const_speed
 
-        self._tck, u, *rest = splprep([X, Y], k=path_degree, s=0.1, u=par)
+        t_evol = np.linspace(0, self.t_end, 101)
+        s_evol = np.linspace(0, self.length, 101)
 
-        # set parameter bounds
-        self.s_bounds=[u[0], u[-1]]
-    
-        # set the running parameter to the start of the path
-        self.s=u[0]
-
-        # set reference position too
-        self.s_ref=u[0]
-
-        # create spline reference speed
-        self._speed_tck = splrep(u, const_speed*np.ones(len(u)), s=0.1) # currently constant speed profile is given
+        self.evol_tck = splrep(t_evol,s_evol, k=1, s=0) # NOTE: This is completely overkill for constant veloctities but can be easily adjusted for more complex speed profiles
 
 
-    def set_trajectory_splines(self, path_tck: tuple, speed_tck: tuple, param_bounds: tuple) -> None:
-        """Sets the Spline parameters of the trajectory directly. 
-           Note that the Spline knot points and coefficients should be in scipy syntax and the Spline should be arc length parametereized
-
-        Args:
-            path_tck (tuple): a tuple containing the vector of knots, the B-spline coefficients, and the degree of the spline representing the path
-            speed_tck (tuple): a tuple containing the vector of knots, the B-spline coefficients, and the degree of the spline representing the speed prfile
-            param_bounds (tuple): a tuple containing the lower and upper bounds of the parameter; normally (0, arc length) but it can also be shifted e.g. (p, p + arc length)
+    def export_to_time_dependent(self):
+        """Exports the trajectory to a time dependent representation
         """
+        t_eval=np.linspace(0, self.t_end, 100)
+        
+        s=splev(t_eval, self.evol_tck)
+        (x,y)=splev(s, self.pos_tck)
 
-        self._tck=path_tck
-        self._speed_tck=speed_tck
-        self.s_bounds=param_bounds
-        self.s=param_bounds[0]
+        tck, t, *_ = splprep([x, y], k=5, s=0, u=t_eval)
 
+        return tck
+        
 
     def _project_to_closest(self, pos: np.ndarray, param_estimate: float, projetion_window: float, projection_step: float) -> float:
         """Projects the vehicle position onto the ginven path and returns the path parameter.
@@ -96,8 +85,8 @@ class CarTrajectory(TrajectoryBase):
 
         
         # calulate the endpoints of the projection window
-        floored = self._clamp(param_estimate - projetion_window / 2, self.s_bounds)
-        ceiled = self._clamp(param_estimate + projetion_window/2, self.s_bounds)
+        floored = self._clamp(param_estimate - projetion_window / 2, [0, self.length])
+        ceiled = self._clamp(param_estimate + projetion_window/2, [0, self.length])
 
 
         # create a grid on the window with the given precision
@@ -105,36 +94,37 @@ class CarTrajectory(TrajectoryBase):
 
 
         # evaluate the path at each instance
-        path_points = np.array(splev(window, self._tck)).T
+        path_points = np.array(splev(window, self.pos_tck)).T
 
         # find & return the closest points
         deltas = path_points - pos
         indx = np.argmin(np.einsum("ij,ij->i", deltas, deltas))
         return floored + indx * projection_step
-
+    
 
 
     def evaluate(self, state, i, time, control_step) -> dict:
         """Evaluates the trajectory based on the vehicle state & time"""
-        if self._tck is None:
+
+        if self.pos_tck is None or self.evol_tck is None: # check if data has already been provided
             raise ValueError("Trajectory must be defined before evaluation")
         
         pos=np.array([state["pos_x"],state["pos_y"]])
 
         # get the path parameter (position along the path)
-        s_est=self.s+float(state["long_vel"])*control_step
-        self.s=self._project_to_closest(pos=pos, param_estimate=s_est, projetion_window=2, projection_step=0.005) # the projection parameters cound be refined/not hardcoded (TODO)
+        s_ref=splev(time, self.evol_tck) # estimate the path parameter based on the time
+        s=self._project_to_closest(pos=pos, param_estimate=s_ref, projetion_window=5, projection_step=0.005) # the projection parameters cound be refined/not hardcoded
 
         # check if the retrievd is satisfies the boundary constraints & the path is not completed
-        if self.s < self.s_bounds[0] or self.s >= self.s_bounds[1]-0.01: # substraction is required because of the projection step
+        if time>=self.t_end: # substraction is required because of the projection step
             self.output["running"]=False # stop the controller
         else:
             self.output["running"]= True # the goal has not been reached, evaluate the trajectory
 
         # get path data at the parameter s
-        (x, y) = splev(self.s, self._tck)
-        (x_, y_) = splev(self.s, self._tck, der=1)
-        (x__,y__) = splev(self.s, self._tck,der=2)
+        (x, y) = splev(s, self.pos_tck)
+        (x_, y_) = splev(s, self.pos_tck, der=1)
+        (x__,y__) = splev(s, self.pos_tck,der=2)
         
         # calculate base vectors of the moving coordinate frame
         s0 = np.array(
@@ -148,18 +138,31 @@ class CarTrajectory(TrajectoryBase):
         c=abs(x__*y_-x_*y__)/((x_**2+y_**2)**(3/2))
 
         # get speed reference
-        self.s_ref += splev(self.s, self._speed_tck)*control_step
+        v_ref = splev(time, self.evol_tck, der=1)
 
         self.output["ref_pos"]=np.array([x,y])
         self.output["s0"] = s0
         self.output["z0"] = z0
         self.output["c"] = c
 
-        self.output["s"] = self.s
-        self.output["s_ref"]=self.s_ref # might be more effective if output["s"] & self.s are combined
-        self.output["v_ref"] = splev(self.s, self._speed_tck)
+        self.output["s"] = s
+        self.output["s_ref"]=s_ref # might be more effective if output["s"] & self.s are combined
+        self.output["v_ref"] = v_ref
 
         return self.output
+    
+    def is_finished(self) -> bool:
+        """Checks if the trajectory is finished
+
+        Returns:
+            bool: True if the trajectory is finished, False otherwise
+        """
+        try:
+            finished =  not self.output["running"]
+        except KeyError:
+            finished = False
+
+        return finished
     
 
 
@@ -206,73 +209,110 @@ class CarTrajectory(TrajectoryBase):
 
         return angle
     
-    def plot_trajectory(self) -> None:
+    def plot_trajectory(self, block=True) -> None:
         """ Plots, the defined path of the trajectory in the X-Y plane. Nota, that this function interrupts the main thread and the simulator!
         """
 
-        if self._tck is None: # check if data has already been provided
+        if self.pos_tck is None or self.evol_tck is None: # check if data has already been provided
             raise ValueError("No Spline trajectory is specified!")
         
         # evaluate the path between the bounds and plot
-        (x,y)=splev(np.linspace(self.s_bounds[0], self.s_bounds[1], 100), self._tck)
-        plt.plot(x,y)
-        plt.show()
+        t_eval=np.linspace(0, self.t_end, 100)
+        
+        s=splev(t_eval, self.evol_tck)
+        (x,y)=splev(s, self.pos_tck)
+        
+        fig, axs = plt.subplot_mosaic("AB;CC;DD")
+
+        axs["A"].plot(t_eval,x)
+        axs["A"].set_xlabel("t [s]")
+        axs["A"].set_ylabel("x [m]")
+        axs["A"].set_title("X coordinate")
+
+        axs["B"].plot(t_eval,y)
+        axs["B"].set_xlabel("t [s]")
+        axs["B"].set_ylabel("y [m]")
+        axs["B"].set_title("Y coordinate")
+
+        axs["C"].plot(x,y)
+        axs["C"].set_xlabel("x [m]")
+        axs["C"].set_ylabel("y [m]")
+        axs["C"].set_title("X-Y trajectory")
+        axs["C"].axis("equal")
+
+        axs["D"].plot(t_eval, s)
+        axs["D"].set_xlabel("t [s]")
+        axs["D"].set_ylabel("s [m]")
+        axs["D"].set_title("Path parameter")
+
+        plt.tight_layout()
+        plt.show(block=block)
+
 
 
 class CarLPVController(ControllerBase):
-    def __init__(self, mass: float, inertia: Union[tuple,np.ndarray,list], long_gains: Union[np.ndarray, None] =None, lat_gains: Union[np.ndarray, None] = None, **kwargs):
+    def __init__(self, model=None, K_long=None, K_long_outer=None, K_lat=None, control_step=None):
         """Trajectory tracking LPV feedback controller, based on the decoupled longitudinal and lateral dynamics
 
         Args:
-            mass (float): Vehicle mass
-            inertia (float | np.ndarray | list): Vehicle inertia
-            long_gains (np.ndarray | None, optional): Polynomial coefficients of the longitudinal controller gains. Defaults to None.
-            lat_gains (np.ndarray | None, optional): Polynomila coefficients of the lateral controller gains. Defaults to None.
-
-            Additionally drivetrain parameters (C_m1, C_m2, C_m3) can be updated through keyword arguments.
+            model (dict): Dict containing the vehicle model parameters
+            K_long (np.ndarray): Longitudinal gains
+            K_lat (np.ndarray): Lateral gains
+            control_step (float): Control step of the controller
+            K_long_outer (np.ndarray): Outer longitudinal gains
         """
 
-        # get mass/intertia & additional vehicle params
-        self.m=mass
-        self.I_z=inertia[2] # only Z-axis inertia is needed
+        if model is None: # default model parameters
+            self.model = {"m": 2.923, # [kg]
+                          "l_f": 0.163, # [m]
+                          "l_r": 0.168, # [m]
+                          "I_z": 0.0796, # [kg m^2]
 
-        # set additional vehicle params or default to predefined values
-        try:
-            self.C_m1=kwargs["C_m1"]
-        except KeyError:
-            self.C_m1=65
-        try:
-            self.C_m2=kwargs["C_m2"]
-        except KeyError:
-            self.C_m2=3.3
-        try:
-            self.C_m3=kwargs["C_m3"]
-        except KeyError:
-            self.C_m3=1.05
+                          # drivetrain parameters
+                          "C_m1": 61.383, # [N]
+                          "C_m2": 3.012, # [Ns/m]
+                          "C_m3": 0.604, # [N]
 
-        try:
-            self.dt=kwargs["control_step"]
-        except KeyError:
-            self.dt=1.0/40 # standard frequency for which the controllers are designed
-
-        if long_gains is not None: # gains are specified
-            self.k_long1=np.poly1d(long_gains[0,:])
-            self.k_long2=np.poly1d(long_gains[1,:])
-        else: # no gains specified use the default
-            self.k_long1=np.poly1d([0.0010,-0.0132,0.4243])
-            self.k_long2=np.poly1d([-0.0044, 0.0563, 0.0959])
-        
-        if lat_gains is not None:
-            self.k_lat1=np.poly1d(lat_gains[0,:])
-            self.k_lat2=np.poly1d(lat_gains[1,:])
-            self.k_lat3=np.poly1d(lat_gains[2,:])
+                          # tire parameters
+                          "C_f": 41.7372, # [N/rad]
+                          "C_r": 29.4662, # [N/rad]
+                          }
         else:
-            self.k_lat1=np.poly1d([0.00127, -0.00864, 0.0192, 0.0159])
-            self.k_lat2=np.poly1d([0.172, -1.17, 2.59, 2.14])
-            self.k_lat3=np.poly1d([0.00423, 0.0948, 0.463, 0.00936])
+            self.model = model
+
+        if K_long is None:
+            def K_long(p):
+                k1=np.polyval([-0.156375989795226, 0, -0.174818911809753], p)
+                return k1
+            self._K_long = K_long
+        else:
+            self._K_long = K_long
+
+        if K_lat is None:
+            def K_lat(p):
+                k1=np.polyval([-0.00963161973193937, 0.0766311773839150, -0.171265625838336, -0.127420691079483], p)
+                k2=np.polyval([0.172, -1.17, 2.59, 2.14], p)
+                k3=np.polyval([0.00423, 0.0948, 0.463, 0.00936], p)
+                return np.array([k1, k2, k3])
+            self._K_lat = K_lat
+        else:
+            self._K_lat = K_lat
+
+        if K_long_outer is None:
+            self._K_long_outer = -.5
+        else:
+            self._K_long_outer = K_long_outer
+
+        if control_step is None:
+            self.dt = 1.0/40.0
 
         # define the initial value of the lateral controller integrator
         self.q=0 # lateral controller integrator 
+
+        # empty dict for storing current error and input values
+        self.errors = {}
+        self.input = {}
+
 
 
     def compute_control(self, state: dict, setpoint: dict, time, **kwargs) -> np.array:
@@ -306,9 +346,9 @@ class CarLPVController(ControllerBase):
         v_xi=state["long_vel"]
         v_eta=state["lat_vel"]
 
+        v_r=v_ref+self._K_long_outer*(s-s_ref)
 
         beta=np.arctan2(v_eta,abs(v_xi)) # abs() needed for reversing 
-
 
         theta_p = np.arctan2(s0[1], s0[0])
 
@@ -326,7 +366,6 @@ class CarLPVController(ControllerBase):
         e=-z1
         self.q+=e
         self.q=self._clamp(self.q,0.1)
-        self.q=0
 
         # estimate error derivative
         try:
@@ -336,21 +375,39 @@ class CarLPVController(ControllerBase):
             self.edot=0
             self.ep=e
 
-        # compute control inputss
-        delta=-theta_e+self.k_lat1(v_xi)*self.q+self.k_lat2(v_xi)*e+self.k_lat3(v_xi)*self.edot
-
-        if time>2:
-            d=(self.C_m2*v_ref/p+self.C_m3*np.sign(v_ref))/self.C_m1
-        else:
-            d=(self.C_m2*v_ref/p+self.C_m3*np.sign(v_ref))/self.C_m1-self.k_long1(p)*(s-s_ref)-self.k_long2(p)*(v_xi-v_ref/p)
+        # compute control inputs
+        delta=-theta_e + (self._K_lat(v_xi) @ np.array([[self.q],[e],[self.edot]])).item() \
+                  - self.model["m"]/self.model["C_f"]*((self.model["l_r"]*self.model["C_r"]-self.model["l_f"]*self.model["C_f"])/self.model["m"]-1)*c
+        
+        d=(self.model["C_m2"]*v_r+self.model["C_m3"]*np.sign(v_ref))/self.model["C_m1"]+self._K_long(delta)*(v_xi-v_r/p)
         
         # clamp control inputs into the feasible range
         d=self._clamp(d,(0,0.25)) # currently only forward motion, TODO: reversing control
         delta=self._clamp(delta, (-.5,.5))
 
+        # store current error & input values to be accessable from outside
+        self.errors = {"lateral" : e, "heading" : theta_e, "velocity" : v_xi-v_r, "longitudinal": s-s_ref}
+        self.input = {"d" : d, "delta" : delta}
+
         return np.array([d, delta])
 
-        
+    def get_errors(self) -> dict:
+        """Returns the current error values
+
+        Returns:
+            dict: Dict containing the current error values
+        """
+        return self.errors
+    
+    def get_inputs(self) -> dict:
+        """Returns the current input values
+
+        Returns:
+            dict: Dict containing the current input values
+        """
+        return self.input
+
+
     @staticmethod
     def _clamp(value: Union[float,int], bound: Union[int,float,list,tuple,np.ndarray]) -> float:
         """Helper function that clamps the given value with the specified bounds
