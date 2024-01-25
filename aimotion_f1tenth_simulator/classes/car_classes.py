@@ -282,8 +282,9 @@ class CarLPVController(ControllerBase):
 
         if K_long is None:
             def K_long(p):
-                k1=np.polyval([-0.156375989795226, 0, -0.174818911809753], p)
-                return k1
+                k1=np.polyval([0.0010,-0.0132,0.4243], p)
+                k2=np.polyval([-0.0044, 0.0563, 0.0959], p)
+                return np.array([k1, k2])
             self._K_long = K_long
         else:
             self._K_long = K_long
@@ -308,6 +309,7 @@ class CarLPVController(ControllerBase):
 
         # define the initial value of the lateral controller integrator
         self.q=0 # lateral controller integrator 
+        self.r=0 # longitudinal controller integrator
 
         # empty dict for storing current error and input values
         self.errors = {}
@@ -346,7 +348,7 @@ class CarLPVController(ControllerBase):
         v_xi=state["long_vel"]
         v_eta=state["lat_vel"]
 
-        v_r=v_ref+self._K_long_outer*(s-s_ref)
+        #v_r=v_ref+10*self._K_long_outer*(s-s_ref)
 
         beta=np.arctan2(v_eta,abs(v_xi)) # abs() needed for reversing 
 
@@ -358,14 +360,16 @@ class CarLPVController(ControllerBase):
         # heading error
         theta_e=self._normalize(phi-theta_p)
 
-        # longitudinal model parameter
+        # longitudinal model parameter and integrator
         p=abs(np.cos(theta_e+beta)/np.cos(beta)/(1-c*z1))
+        #self.r+=v_xi-v_r
 
 
         # invert z1 for lateral dynamics:
         e=-z1
         self.q+=e
         self.q=self._clamp(self.q,0.1)
+
 
         # estimate error derivative
         try:
@@ -379,14 +383,14 @@ class CarLPVController(ControllerBase):
         delta=-theta_e + (self._K_lat(v_xi) @ np.array([[self.q],[e],[self.edot]])).item() \
                   - self.model["m"]/self.model["C_f"]*((self.model["l_r"]*self.model["C_r"]-self.model["l_f"]*self.model["C_f"])/self.model["m"]-1)*c
         
-        d=(self.model["C_m2"]*v_r+self.model["C_m3"]*np.sign(v_ref))/self.model["C_m1"]+self._K_long(delta)*(v_xi-v_r/p)
+        d=(self.model["C_m2"]*v_ref/p+self.model["C_m3"]*np.sign(v_ref))/self.model["C_m1"]-self._K_long(p)@np.array([[s-s_ref],[v_xi-v_ref/p]])
         
         # clamp control inputs into the feasible range
         d=self._clamp(d,(0,0.25)) # currently only forward motion, TODO: reversing control
         delta=self._clamp(delta, (-.5,.5))
 
         # store current error & input values to be accessable from outside
-        self.errors = {"lateral" : e, "heading" : theta_e, "velocity" : v_xi-v_r, "longitudinal": s-s_ref}
+        self.errors = {"lateral" : e, "heading" : theta_e, "velocity" : v_xi-v_ref, "longitudinal": s-s_ref}
         self.input = {"d" : d, "delta" : delta}
 
         return np.array([d, delta])

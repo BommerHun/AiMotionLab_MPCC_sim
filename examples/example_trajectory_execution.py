@@ -82,7 +82,7 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 car0_trajectory=CarTrajectory()
 
 # define path points and build the path
-path_points = 2*np.array(
+path_points = 8*np.array(
     [
         [0, 0],
         [1, 1],
