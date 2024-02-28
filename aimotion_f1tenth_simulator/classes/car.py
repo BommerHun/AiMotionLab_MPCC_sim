@@ -90,7 +90,14 @@ class Car(MovingObject):
 
         self.steer_angle = 0
         self.max_steer = 0.5
-    
+
+        self.steering_offset = 0
+        self.steering_gain = 1
+
+    def set_steering_parameters(self, **kwargs):
+        self.steering_offset = kwargs["offset"] if "offset" in kwargs else 0
+        self.steering_gain = kwargs["gain"] if "gain" in kwargs else 1
+
     def set_ackermann_parameters(self, WB, TW):
         self.WB = WB
         self.TW = TW
@@ -176,7 +183,8 @@ class Car(MovingObject):
     
     def set_steer_angle(self):
         
-        delta_left, delta_right = self.calc_ackerman_angles(self.delta)
+        delta_actual = self.steering_offset + self.steering_gain * self.delta
+        delta_left, delta_right = self.calc_ackerman_angles(delta_actual)
         self.wheelfl.ctrl_steer[0] = delta_left
         self.wheelfr.ctrl_steer[0] = delta_right
 
@@ -296,6 +304,7 @@ class Fleet1Tenth(Car):
         self.C_m1 = 65
         self.C_m2 = 3.3
         self.C_m3 = 1.05
+
 
     def set_drivetrain_parameters(self, **kwargs):
         if "C_m1" in kwargs:

@@ -9,7 +9,7 @@ from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPV
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 
-GUI = False # if True the simulator window will be visible, if False the simulator will run in the background 
+GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
@@ -74,15 +74,15 @@ simulator = ActiveSimulator(xml_filename, rec_interval, control_step, graphics_s
 car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 
 # additional modeling opportunities: the drivetrain parameters can be adjusted
-#car0.set_drivetrain_parameters(C_m1=60, C_m2=2, C_m3=0.5) # if not specified the default values will be used 
-
+car0.set_drivetrain_parameters(C_m1=40, C_m2=3, C_m3=0.5) # if not specified the default values will be used 
+car0.set_steering_parameters(offset=0.3, gain=1) # if not specified the default values will be used
 
 
 # create a trajectory
 car0_trajectory=CarTrajectory()
 
 # define path points and build the path
-path_points = 8*np.array(
+path_points = 2*np.array(
     [
         [0, 0],
         [1, 1],
