@@ -5,9 +5,12 @@ import matplotlib.pyplot as plt
 from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 from aimotion_f1tenth_simulator.util import xml_generator
 from aimotion_f1tenth_simulator.classes.car import Car
-from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPVController
+from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPVController, CarMPCCController
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
+from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
+from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip
+import yaml
 
 GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 
@@ -45,7 +48,7 @@ car0_name = scene.add_car(pos="0 0 0.052",
                           #inertia=inertia,
                           #wheel_radius=wheel_radius) # add the car to the scene
  
-
+x0 = np.array([0, 0, 0.84,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -74,8 +77,8 @@ simulator = ActiveSimulator(xml_filename, rec_interval, control_step, graphics_s
 car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 
 # additional modeling opportunities: the drivetrain parameters can be adjusted
-car0.set_drivetrain_parameters(C_m1=40, C_m2=3, C_m3=0.5) # if not specified the default values will be used 
-car0.set_steering_parameters(offset=0.3, gain=1) # if not specified the default values will be used
+#car0.set_drivetrain_parameters(C_m1=40, C_m2=3, C_m3=0.5) # if not specified the default values will be used 
+#car0.set_steering_parameters(offset=0.3, gain=1) # if not specified the default values will be used
 
 
 # create a trajectory
@@ -106,15 +109,35 @@ path_points = 2*np.array(
         [-1, -1],
         [0, 0],
     ]
-)
+)*0.4
 
+path, v = null_paperclip()
+car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
-car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
-car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
+#car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
+#car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
 
 
-car0_controller = CarLPVController() # init controller
+#MPCC modifications:
 
+
+#car0_controller = CarLPVController() # init controller
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+
+file_name = os.path.join(parent_dir, "examples/Simulator_config.yaml")
+with open(file_name) as file:
+    params = yaml.full_load(file)
+
+args = {}
+
+args["vehicle_params"] = params["parameter_server"]["ros__parameters"]["vehicle_params"]
+args["MPCC_params"] = params["parameter_server"]["ros__parameters"]["controllers"]["MPCC"]
+args["drive_bridge"] = params["parameter_server"]["ros__parameters"]["drive_bridge"]
+args["crazy_observer"] = params["parameter_server"]["ros__parameters"]["crazy_observer"]
+MOTOR_LIMIT = args["drive_bridge"]["MOTOR_LIMIT"]
+
+
+car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = False, MPCC_params= args["MPCC_params"])
 
 # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
 car0_controllers = [car0_controller]
@@ -126,7 +149,19 @@ def update_controller_type(state, setpoint, time, i):
 # setting update_controller_type method, trajectory and controller for car0
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
+
+car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, 0.05)
 car0.set_controllers(car0_controllers)
+
+#Setting up the horizon plotter:
+
+
+plotter = MPCC_plotter()
+s = np.linspace(0, car0_controller.trajectory.L,10000)
+
+plotter.set_ref(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)))
+
+plotter.show()
 
 
 # start simulation and collect position data
@@ -139,13 +174,13 @@ delta = []
 t = []
 
 
-while not simulator.glfw_window_should_close(): # the loop runs until the window is closed
+while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
     if GUI:
         simulator.update()
     else:
         simulator.update_()
-
+    
     st=car0.get_state() # states corresponding to a dynamic single track representation
     x.append(st["pos_x"])
     y.append(st["pos_y"])
@@ -164,13 +199,23 @@ while not simulator.glfw_window_should_close(): # the loop runs until the window
     # get time
     t.append(simulator.i*simulator.control_step)
 
-    if car0_trajectory.is_finished():
+    if car0_trajectory.is_finished() or car0_controller.finished == True:
         break
+
+    
+    #update horizon plotter
+    horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
+    for i in range(car0_controller.parameters.N-1):
+        x_temp   = car0_controller.ocp_solver.get(i+1, 'x')
+        x_temp = np.reshape(x_temp, (-1,1))
+        horizon = np.append(horizon, x_temp, axis = 1)
+    plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
     
 simulator.close()
 
 # plot simulation results
 plt.figure()
+plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)), "b")
 plt.plot(x,y)
 plt.axis('equal')
 plt.xlabel("x (m)")

@@ -1,0 +1,136 @@
+parameter_server:
+  ros__parameters:
+    car_id: JoeBush1
+    # radio params
+    radio_channel: 100
+    devid: 0
+
+    # model params
+    vehicle_params:
+      C_f: 41.7372
+      C_r: 29.4662
+      l_f: 0.163
+      l_r: 0.168
+      C_m1: 52.4282
+      C_m2: 5.2465
+      C_m3: 1.1194
+      m: 2.9
+      I_z: 0.0796 # [kg m^2]
+
+    controllers:
+      LPV_LQR:
+        FREQUENCY: 60.0
+        LATERAL_CONTROL_GAINS:
+          k1:
+          - 0.00266
+          - -0.0168
+          - 0.0368
+          - 0.0357
+          k1_r:
+          - -0.0008
+          - 0.0442
+          - -1.2247
+          k2:
+          - 0.0424
+          - -0.268
+          - 0.588
+          - 0.57
+          k2_r:
+          - -0.0002
+          - 0.0191
+          - -0.9531
+          k3:
+          - 0.00952
+          - -0.109
+          - 0.469
+          - 0.0322
+        LONGITUDINAL_CONTROL_GAINS:
+
+          k1:
+          - 0.0001
+          - -0.0014
+          - 0.0908
+          k2:
+          - -0.0025
+          - 0.0298
+          - 0.0095
+      MPCC:
+        mu_xi: 300
+        mu_eta: 170
+        res_limit: 100.0
+        freq_limit: 5
+        #Input constraints
+        delta_max: 0.5 # [rad]
+        d_max: 0.25
+        d_min: 0.05       
+        opt_tol: 0.01
+        #Incremental input constraints        
+
+        ddot_max: 10000.0
+        deltadot_max: 10000.0
+        thetahatdot_min: 0.001
+        thetahatdot_max: 5.0
+
+        #Optimisation parameters:
+        max_QP_iter: 5
+        N: 12 #number of shooting nodes
+        Tf: 0.7 #[s] time lenght of the opt. horizon
+        #Cost weights:
+        q_con: 90.0 
+        q_long: 30.0
+        q_theta: 0.5
+        q_d: 0.015
+        q_delta: 0.005
+
+      GP_LPV_LQR:
+        GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP
+        FREQUENCY: 60.0
+        NUM_OF_INDUCING: 30
+        BATCH_SIZE: 5
+        RETRAIN_ITER: 5
+        FORGETTING_FACTOR: 0.97
+        CONFIDENCE: 0.9
+        LATERAL_CONTROL_GAINS:
+          k1:
+          - 0.00266
+          - -0.0168
+          - 0.0368
+          - 0.0357
+          k1_r:
+          - -0.0008
+          - 0.0442
+          - -1.2247
+          k2:
+          - 0.0424
+          - -0.268
+          - 0.588
+          - 0.57
+          k2_r:
+          - -0.0002
+          - 0.0191
+          - -0.9531
+          k3:
+          - 0.00952
+          - -0.109
+          - 0.469
+          - 0.0322
+        LONGITUDINAL_CONTROL_GAINS:
+          k1:
+          - 0.0001
+          - -0.0014
+          - 0.0908
+          k2:
+          - -0.0025
+          - 0.0298
+          - 0.0095
+
+
+    crazy_observer:
+      CUTOFF: 2.0
+      FREQUENCY: 30.0
+      MARKER_OFFSET: 0.0
+    drive_bridge:
+      MOTOR_LIMIT: 0.18
+      STEERING_GAINS:
+      - -0.90616 #-0.8  #-0.90616
+      -  0.54172 #  0.5  #0.54172
