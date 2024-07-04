@@ -216,7 +216,7 @@ simulator.close()
 # plot simulation results
 plt.figure()
 plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)), "b")
-plt.plot(x,y)
+plt.plot(x,y, "r")
 plt.axis('equal')
 plt.xlabel("x (m)")
 plt.ylabel("y (m)")
