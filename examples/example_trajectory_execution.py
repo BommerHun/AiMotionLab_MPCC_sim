@@ -48,7 +48,7 @@ car0_name = scene.add_car(pos="0 0 0.052",
                           #inertia=inertia,
                           #wheel_radius=wheel_radius) # add the car to the scene
  
-x0 = np.array([0, 0, 0.84,0,0,0])
+x0 = np.array([0, 0, 0.64424,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 

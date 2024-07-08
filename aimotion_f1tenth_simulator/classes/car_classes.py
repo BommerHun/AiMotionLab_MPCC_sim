@@ -1199,10 +1199,9 @@ class CarMPCCController(ControllerBase):
             num_iter = i+1
             if max(res) < tol:
                 break #Tolerance limit reached
-            if t > self.MPCC_params["N"]/self.MPCC_params["Tf"]: #If the controller frequency is below 60 Hz break
+            if t > 1/60: #If the controller frequency is below 60 Hz break
                 if self.muted == False:
-                    pass
-                    #print("Time limit reached")
+                    print("\nTime limit reached\n")
                 #break
 
         x_opt = np.reshape(self.ocp_solver.get(1, "x"),(-1,1)) #Full predictied optimal state vector (x,y,phi, vxi, veta, omega, thetahat, d, delta)
@@ -1494,9 +1493,20 @@ class CarMPCCController(ControllerBase):
         ocp.constraints.idxbu = np.arange(3)
         phi0 = float(self.trajectory.get_path_parameters_ang(self.s_start)[2])
 
+
+        """using non-linear constraints:"""
         ocp.constraints.lh = np.array([-1])
         ocp.constraints.uh = np.array([1])
-        #ocp.constraints.idxsh = np.arange(1)
+
+        ocp.cost.zl = np.array([1])  # lower slack penalty
+        ocp.cost.zu = np.array([1])  # upper slack penalty
+        ocp.cost.Zl = np.array([1])  # lower slack weight
+        ocp.cost.Zu = np.array([1])  # upper slack weight
+
+        ## Initialize slack variables for lower and upper bounds
+        ocp.constraints.lsh = np.zeros(1)
+        ocp.constraints.ush = np.zeros(1)
+        ocp.constraints.idxsh = np.arange(1)
         #x0 = np.array((float(self.trajectory.spl_sx(self.s_start)), #x
         #            float(self.trajectory.spl_sy(self.s_start)), #y
         #            phi0,#phi
@@ -1541,7 +1551,7 @@ class CarMPCCController(ControllerBase):
         t_end = evol_tck[0][-1]
 
         
-        t_eval=np.linspace(0, t_end, 10000)
+        t_eval=np.linspace(0, t_end, 1000)
 
         s=splev(t_eval, evol_tck)
 

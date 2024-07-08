@@ -55,13 +55,13 @@ parameter_server:
           - 0.0298
           - 0.0095
       MPCC:
-        mu_xi: 300
-        mu_eta: 170
+        mu_xi: 1000
+        mu_eta: 20
         res_limit: 100.0
         freq_limit: 5
         #Input constraints
         delta_max: 0.5 # [rad]
-        d_max: 0.25
+        d_max: 0.15
         d_min: 0.05       
         opt_tol: 0.01
         #Incremental input constraints        
@@ -69,12 +69,12 @@ parameter_server:
         ddot_max: 10000.0
         deltadot_max: 10000.0
         thetahatdot_min: 0.001
-        thetahatdot_max: 5.0
+        thetahatdot_max: 5
 
         #Optimisation parameters:
-        max_QP_iter: 5
-        N: 12 #number of shooting nodes
-        Tf: 0.7 #[s] time lenght of the opt. horizon
+        max_QP_iter: 20
+        N: 8 #number of shooting nodes
+        Tf: 0.5 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 90.0 
         q_long: 30.0
