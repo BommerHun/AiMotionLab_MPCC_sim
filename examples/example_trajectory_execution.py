@@ -9,9 +9,8 @@ from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPV
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
-from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip
+from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty
 import yaml
-
 GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 
 # color definitions for multiple cars
@@ -111,8 +110,8 @@ path_points = 2*np.array(
     ]
 )*0.4
 
-path, v = null_paperclip()
-car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
+path, v = null_infty()
+car0_trajectory.build_from_points_const_speed(path*1.2, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 #car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
@@ -167,12 +166,15 @@ plotter.show()
 # start simulation and collect position data
 x = []
 y = []
+v_xi = []
+v_eta = []
+phi = []
+omega = []
 lateral_errors = []
 longitudinal_errors = []
 d = []
 delta = []
 t = []
-
 
 while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
@@ -184,7 +186,11 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     st=car0.get_state() # states corresponding to a dynamic single track representation
     x.append(st["pos_x"])
     y.append(st["pos_y"])
-
+    v_xi.append(st["long_vel"])
+    v_eta.append(st["lat_vel"])
+    phi.append(st["head_angle"])
+    omega.append(st["yaw_rate"])
+    
     # get errors
     errors = car0_controller.get_errors()
     lateral_errors.append(errors["lateral"])
@@ -230,7 +236,6 @@ axs[0].set_xlabel("Time (s)")
 axs[1].plot(t,d)
 axs[1].set_ylabel("Motor reference (1)")
 axs[1].set_xlabel("Time (s)")
-plt.show(block=False)
 
 fix, axs = plt.subplots(2, 1)
 axs[0].plot(t,lateral_errors)
@@ -239,4 +244,24 @@ axs[0].set_xlabel("Time (s)")
 axs[1].plot(t,longitudinal_errors)
 axs[1].set_ylabel("Longitudinal error (m)")
 axs[1].set_xlabel("Time (s)")
-plt.show(block=True)
+
+
+fix, axs = plt.subplots(3, 2)
+
+axs[0, 0].set_title("x")
+axs[0][0].plot(t, x)
+axs[1, 0].set_title("y")
+axs[1][0].plot(t, y)
+axs[2, 0].set_title("y")
+axs[2][0].plot(t, phi)
+axs[0, 1].set_title("v_xi")
+axs[0][1].plot(t, v_xi)
+axs[1, 1].set_title("v_eta")
+axs[1][1].plot(t, v_eta)
+axs[2, 1].set_title("omega")
+axs[2][1].plot(t, omega)
+
+plt.ion()
+plt.show()
+
+input("Press enter to close")

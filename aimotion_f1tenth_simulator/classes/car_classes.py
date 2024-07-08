@@ -1498,10 +1498,10 @@ class CarMPCCController(ControllerBase):
         ocp.constraints.lh = np.array([-1])
         ocp.constraints.uh = np.array([1])
 
-        ocp.cost.zl = np.array([1])  # lower slack penalty
-        ocp.cost.zu = np.array([1])  # upper slack penalty
-        ocp.cost.Zl = np.array([1])  # lower slack weight
-        ocp.cost.Zu = np.array([1])  # upper slack weight
+        ocp.cost.zl = np.array([0.1])  # lower slack penalty
+        ocp.cost.zu = np.array([0.1])  # upper slack penalty
+        ocp.cost.Zl = np.array([0.5])  # lower slack weight
+        ocp.cost.Zu = np.array([0.5])  # upper slack weight
 
         ## Initialize slack variables for lower and upper bounds
         ocp.constraints.lsh = np.zeros(1)
@@ -1551,7 +1551,7 @@ class CarMPCCController(ControllerBase):
         t_end = evol_tck[0][-1]
 
         
-        t_eval=np.linspace(0, t_end, 1000)
+        t_eval=np.linspace(0, t_end, 10000)
 
         s=splev(t_eval, evol_tck)
 

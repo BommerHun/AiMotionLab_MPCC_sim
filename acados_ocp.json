@@ -74,7 +74,7 @@
             0.0,
             0.0,
             0.05,
-            0.15,
+            0.3,
             0.0
         ],
         "lbx_e": [],
@@ -107,8 +107,8 @@
             10000.0
         ],
         "ubx": [
-            22.056235668302886,
-            0.15,
+            35.97319374942814,
+            0.3,
             0.5
         ],
         "ubx_0": [
@@ -119,7 +119,7 @@
             0.0,
             0.0,
             0.05,
-            0.15,
+            0.3,
             0.0
         ],
         "ubx_e": [],
@@ -159,12 +159,12 @@
         "W_0": [],
         "W_e": [],
         "Zl": [
-            1
+            0.5
         ],
         "Zl_0": [],
         "Zl_e": [],
         "Zu": [
-            1
+            0.5
         ],
         "Zu_0": [],
         "Zu_e": [],
@@ -178,12 +178,12 @@
         "yref_0": [],
         "yref_e": [],
         "zl": [
-            1
+            0.1
         ],
         "zl_0": [],
         "zl_e": [],
         "zu": [
-            1
+            0.1
         ],
         "zu_0": [],
         "zu_e": []
@@ -193,7 +193,7 @@
         "/usr/include/python3.10"
     ],
     "dims": {
-        "N": 8,
+        "N": 12,
         "nbu": 3,
         "nbx": 3,
         "nbx_0": 9,
@@ -249,8 +249,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((90*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(0.5*thetadot))+(0.015*sq(ddot)))+(0.005*sq(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((90*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(0.5*thetadot))+(0.015*sq(ddot)))+(0.005*sq(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((90*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.5*sq(ddot)))+(0.5*sq(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((90*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.5*sq(ddot)))+(0.5*sq(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -293,7 +293,7 @@
     "problem_class": "OCP",
     "shared_lib_ext": ".so",
     "solver_options": {
-        "Tsim": 0.0625,
+        "Tsim": 0.06666666666666667,
         "alpha_min": 0.05,
         "alpha_reduction": 0.7,
         "as_rti_iter": 1,
@@ -346,16 +346,24 @@
         "rti_log_residuals": 0,
         "shooting_nodes": [
             0.0,
-            0.0625,
-            0.125,
-            0.1875,
-            0.25,
-            0.3125,
-            0.375,
-            0.4375,
-            0.5
+            0.06666666666666667,
+            0.13333333333333333,
+            0.2,
+            0.26666666666666666,
+            0.3333333333333333,
+            0.39999999999999997,
+            0.4666666666666666,
+            0.5333333333333333,
+            0.6,
+            0.6666666666666666,
+            0.7333333333333333,
+            0.7999999999999999
         ],
         "sim_method_jac_reuse": [
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -375,6 +383,10 @@
             4,
             4,
             4,
+            4,
+            4,
+            4,
+            4,
             4
         ],
         "sim_method_num_steps": [
@@ -385,18 +397,26 @@
             1,
             1,
             1,
+            1,
+            1,
+            1,
+            1,
             1
         ],
-        "tf": 0.5,
+        "tf": 0.8,
         "time_steps": [
-            0.0625,
-            0.0625,
-            0.0625,
-            0.0625,
-            0.0625,
-            0.0625,
-            0.0625,
-            0.0625
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667
         ],
         "with_solution_sens_wrt_params": false,
         "with_value_sens_wrt_params": false
