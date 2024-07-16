@@ -58,10 +58,10 @@ parameter_server:
         mu_xi: 1000
         mu_eta: 20
         res_limit: 100.0
-        freq_limit: 5
+        freq_limit: 100
         #Input constraints
         delta_max: 0.5 # [rad]
-        d_max: 0.3
+        d_max: 0.25
         d_min: 0.05       
         opt_tol: 0.01
         #Incremental input constraints        
@@ -72,15 +72,15 @@ parameter_server:
         thetahatdot_max: 5
 
         #Optimisation parameters:
-        max_QP_iter: 10
+        max_QP_iter: 12
         N: 12 #number of shooting nodes
-        Tf: 0.8 #[s] time lenght of the opt. horizon
+        Tf: 1.2 #[s] time lenght of the opt. horizon
         #Cost weights:
-        q_con: 90.0 
+        q_con: 40.0 
         q_long: 30.0
-        q_theta: 3
+        q_theta: 1.5
         q_d: 0.5
-        q_delta: 0.5
+        q_delta: 0.1
 
       GP_LPV_LQR:
         GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP
@@ -130,7 +130,7 @@ parameter_server:
       FREQUENCY: 30.0
       MARKER_OFFSET: 0.0
     drive_bridge:
-      MOTOR_LIMIT: 0.35
+      MOTOR_LIMIT: 0.20
       STEERING_GAINS:
       - -0.90616 #-0.8  #-0.90616
       -  0.54172 #  0.5  #0.54172

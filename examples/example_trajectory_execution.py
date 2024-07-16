@@ -2,6 +2,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.signal import butter, filtfilt
+
 from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 from aimotion_f1tenth_simulator.util import xml_generator
 from aimotion_f1tenth_simulator.classes.car import Car
@@ -11,6 +13,11 @@ from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty
 import yaml
+
+
+alpha = 1
+omega_filt = 0
+v_eta_filt = 0
 GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 
 # color definitions for multiple cars
@@ -152,11 +159,15 @@ car0.set_trajectory(car0_trajectory)
 car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, 0.05)
 car0.set_controllers(car0_controllers)
 
+
 #Setting up the horizon plotter:
 
 
 plotter = MPCC_plotter()
+
 s = np.linspace(0, car0_controller.trajectory.L,10000)
+
+
 
 plotter.set_ref(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)))
 
@@ -175,6 +186,11 @@ longitudinal_errors = []
 d = []
 delta = []
 t = []
+freq = []
+
+st=car0.get_state()
+
+phi_prev = st["head_angle"]
 
 while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
@@ -184,6 +200,22 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         simulator.update_()
     
     st=car0.get_state() # states corresponding to a dynamic single track representation
+
+    omega_filt = st["yaw_rate"]*alpha   + (1-alpha)*omega_filt
+    v_eta_filt = st["lat_vel"]*alpha   + (1-alpha)*v_eta_filt
+    st["yaw_rate"] = omega_filt
+    st["lat_vel"] = v_eta_filt
+
+    phi_cur = st["head_angle"]
+
+    while phi_cur-phi_prev > np.pi:
+        phi_cur = phi_cur-2*np.pi
+    while phi_cur-phi_prev < -np.pi:
+        phi_cur = phi_cur+2*np.pi
+    
+
+    st["head_angle"] = phi_cur
+    phi_prev = phi_cur
     x.append(st["pos_x"])
     y.append(st["pos_y"])
     v_xi.append(st["long_vel"])
@@ -191,11 +223,14 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     phi.append(st["head_angle"])
     omega.append(st["yaw_rate"])
     
+
+
     # get errors
     errors = car0_controller.get_errors()
     lateral_errors.append(errors["lateral"])
     longitudinal_errors.append(errors["longitudinal"])
-
+    
+    freq.append(car0_controller.freq)
 
     # get control inputs
     inputs= car0_controller.get_inputs()
@@ -208,7 +243,8 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     if car0_trajectory.is_finished() or car0_controller.finished == True:
         break
 
-    
+    if freq[-1] < args["MPCC_params"]["freq_limit"]:
+        input("Press enter to continue....(To low computing freq)")
     #update horizon plotter
     horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
     for i in range(car0_controller.parameters.N-1):
@@ -252,7 +288,7 @@ axs[0, 0].set_title("x")
 axs[0][0].plot(t, x)
 axs[1, 0].set_title("y")
 axs[1][0].plot(t, y)
-axs[2, 0].set_title("y")
+axs[2, 0].set_title("phi")
 axs[2][0].plot(t, phi)
 axs[0, 1].set_title("v_xi")
 axs[0][1].plot(t, v_xi)
@@ -261,6 +297,13 @@ axs[1][1].plot(t, v_eta)
 axs[2, 1].set_title("omega")
 axs[2][1].plot(t, omega)
 
+
+plt.figure()
+
+plt.plot(t, freq)
+plt.title("Computing frequency")
+plt.ylabel("frequency (Hz)")
+plt.xlabel("time (s)")
 plt.ion()
 plt.show()
 

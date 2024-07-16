@@ -248,7 +248,9 @@ class CarTrajectory(TrajectoryBase):
         axs["D"].set_xlabel("t [s]")
         axs["D"].set_ylabel("s [m]")
         axs["D"].set_title("Path parameter")
+        plt.figure()
 
+        
         plt.tight_layout()
         plt.show(block=block)
 
@@ -1106,6 +1108,7 @@ class CarMPCCController(ControllerBase):
 
         self.errors = {"lateral" : 0, "heading" : 0, "velocity" : 0, "longitudinal": float(0)}
         self.finished = False
+        self.prev_phi = 0
         self.load_parameters()
 
     def load_parameters(self):
@@ -1186,6 +1189,16 @@ class CarMPCCController(ControllerBase):
 
         x0 = np.concatenate((x0, np.array([self.theta]), self.input))
 
+        #TODO implement unwrap
+
+        while x0[2]-self.prev_phi > np.pi:
+            x0[2] = x0[2]-2*np.pi
+        while x0[2]-self.prev_phi < -np.pi:
+            x0[2] = x0[2]+2*np.pi
+
+        self.prev_phi = x0[2]
+
+
         self.ocp_solver.set(0, 'lbx', x0)
         self.ocp_solver.set(0, 'ubx', x0)
         self.ocp_solver.set(0, 'x', x0)
@@ -1229,7 +1242,7 @@ class CarMPCCController(ControllerBase):
 
 
         self.errors = {"lateral" : float(e_con), "heading" : float(self.theta), "velocity" : float(x_opt[3,0]), "longitudinal": float(e_long)}
-        
+        self.freq = 1/t
         return u_opt
 
         
@@ -1540,7 +1553,7 @@ class CarMPCCController(ControllerBase):
         self.s_start = theta_start
         
         self.x0 = x0 #The current position must be the initial condition
-
+        self.prev_phi = x0[2]
         self.x0[3] = 0.01 #Give a small forward speed to make the problem feasable
         self.x0[5] = 0
         self.x0[4] = 0
