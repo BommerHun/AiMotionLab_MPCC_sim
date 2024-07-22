@@ -697,6 +697,7 @@ class Casadi_MPCC:
             N (int): Control horizon
             dt (float): Sampling time
         """
+        self.MPCC_params = MPCC_params
         self.model = Model(vehicle_params=vehicle_param, MPPC_params=MPCC_params)
         self.nx = self.model.nx # = 6
         self.nu = self.model.nu # = 2
@@ -809,6 +810,14 @@ class Casadi_MPCC:
 
 
         self.lam_g_init = sol.value(self.opti.lam_g)
+        #s = np.linspace(0,self.trajectory.L, 1000)
+        #plt.plot(self.trajectory.spl_sx(s), self.trajectory.spl_sy(s))
+
+        #x = sol.value(self.X[0, :])
+        #y = sol.value(self.X[1, :])
+        
+        #plt.plot(x,y)
+        #plt.show()
         return sol.value(self.X), sol.value(self.v_U),sol.value(self.U), sol.value(self.theta[:]), sol.value(self.v_t)
     
 
@@ -834,7 +843,6 @@ class Casadi_MPCC:
         self.U_0 = self.opti.parameter(2,1)
         self.v_U_0 = self.opti.parameter(2,1)
 
-        
         # Set constraints for initial values#
 
         self.opti.subject_to(self.X[:, 0] == self.X_0)  # initial state
@@ -848,8 +856,11 @@ class Casadi_MPCC:
         self.opti.subject_to(self.v_U[:,0] == self.v_U_0+ self.dt*self.U_0) #init virtual input (d & delta)
 
 
-        
+        F_tire = self.get_tireforce(states=self.X[:,:-1], inputs = self.v_U)
 
+        self.opti.subject_to((F_tire <= 1, F_tire >= -1))
+        
+        
         # Dynamic constraint #
 
         x_pred = self.model.predict(states=self.X[:,:-1], inputs=self.v_U, dt=self.dt)[0] 
@@ -912,7 +923,38 @@ class Casadi_MPCC:
         s_opts = {'max_iter': 2000, 'print_level': 0}
         self.opti.solver('ipopt', p_opt, s_opts)
    
+    def get_tireforce(self, states, inputs):
+        if type(states) == cs.MX:
+            x = states[0, :]
+            y = states[1, :]
+            phi = states[2, :]
+            v_xi = states[3, :]
+            v_eta = states[4, :]
+            omega = states[5, :]
+            d = inputs[0, :]
+            delta = inputs[1, :]
+        else:
+            x = states[0]
+            y = states[1]
+            phi = states[2]
+            v_xi = states[3]
+            v_eta = states[4]
+            omega = states[5]
+            d = inputs[0]
+            delta = inputs[1]
 
+        # slip angles
+        alpha_r = cs.arctan((-v_eta + self.model.l_r*omega)/(v_xi+0.001))
+        alpha_f = delta - cs.arctan((v_eta + self.model.l_f * omega)/(v_xi+0.001))
+
+        # tire forces
+        F_xi = self.model.C_m1*d - self.model.C_m2*v_xi - self.model.C_m3*cs.sign(v_xi)
+        F_reta = self.model.C_r*alpha_r
+        F_feta = self.model.C_f*alpha_f
+
+        F_tire = F_xi**2/self.MPCC_params["mu_xi"]+F_reta**2/self.MPCC_params["mu_eta"]
+        
+        return F_tire
 
     def cost(self):
         """
@@ -1111,6 +1153,10 @@ class CarMPCCController(ControllerBase):
         self.prev_phi = 0
         self.load_parameters()
 
+
+        self.alpha = 1
+        self.prev_state = np.array([])
+
     def load_parameters(self):
         """
         Load self parameters from the dict-s
@@ -1175,7 +1221,18 @@ class CarMPCCController(ControllerBase):
         :return finished (trajectory execution finished)
         """
 
+        
+
         x0 = np.array([x0["pos_x"], x0["pos_y"], x0["head_angle"], x0["long_vel"], x0["lat_vel"], x0["yaw_rate"]])
+
+        x0[4] = self.alpha*x0[4]+(1-self.alpha)*self.prev_state[4]
+        x0[5] = self.alpha*x0[5]+(1-self.alpha)*self.prev_state[5]
+        x0[3] = self.alpha*x0[3]+(1-self.alpha)*self.prev_state[3]
+        #x0[3] = x0[3]*np.random.normal(1,0.1)
+        #x0[4] = x0[4]*np.random.normal(1,0.1)
+        #x0[5] = x0[5]*np.random.normal(1,0.1)
+        self.prev_state = x0
+
         if self.theta >= self.trajectory.L:
             errors = np.array([0.0, 0.0,0.0,float(self.theta), 0.0])
             u_opt = np.array([0,0])
@@ -1184,20 +1241,20 @@ class CarMPCCController(ControllerBase):
 
             self.finished = True
             return u_opt
-        if x0[3] <0.001:
-            x0[3] = 0.001
+        #if x0[3] <0.1:
+        #    x0[3] = 0.1
 
         x0 = np.concatenate((x0, np.array([self.theta]), self.input))
 
         #TODO implement unwrap
 
+        
         while x0[2]-self.prev_phi > np.pi:
             x0[2] = x0[2]-2*np.pi
         while x0[2]-self.prev_phi < -np.pi:
             x0[2] = x0[2]+2*np.pi
 
         self.prev_phi = x0[2]
-
 
         self.ocp_solver.set(0, 'lbx', x0)
         self.ocp_solver.set(0, 'ubx', x0)
@@ -1212,10 +1269,10 @@ class CarMPCCController(ControllerBase):
             num_iter = i+1
             if max(res) < tol:
                 break #Tolerance limit reached
-            if t > 1/60: #If the controller frequency is below 60 Hz break
+            if t > 1/150: #If the controller frequency is below 60 Hz break
                 if self.muted == False:
-                    print("\nTime limit reached\n")
-                #break
+                    print("\nTime limit reached: 150Hz\n")
+                
 
         x_opt = np.reshape(self.ocp_solver.get(1, "x"),(-1,1)) #Full predictied optimal state vector (x,y,phi, vxi, veta, omega, thetahat, d, delta)
         self.theta = x_opt[6,0]
@@ -1557,6 +1614,8 @@ class CarMPCCController(ControllerBase):
         self.x0[3] = 0.01 #Give a small forward speed to make the problem feasable
         self.x0[5] = 0
         self.x0[4] = 0
+
+        self.prev_state = x0
 
         self.input = np.array([self.MPCC_params["d_max"],0])
 

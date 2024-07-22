@@ -109,8 +109,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   w1 *= w3;
   /* #23: @1 = sq(@1) */
   w1 = casadi_sq( w1 );
-  /* #24: @3 = 20 */
-  w3 = 20.;
+  /* #24: @3 = 10 */
+  w3 = 10.;
   /* #25: @1 = (@1/@3) */
   w1 /= w3;
   /* #26: @0 = (@0+@1) */

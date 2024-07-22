@@ -44,7 +44,8 @@ wheel_radius = ".072388"
 
 # create xml with a car
 scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
-car0_name = scene.add_car(pos="0 0 0.052",
+#heading: 0.64424
+car0_name = scene.add_car(pos="0 0 0.51",
                           quat=carHeading2quaternion(0.64424),
                           color=RED_COLOR,
                           is_virtual=True,
@@ -63,7 +64,7 @@ virt_parsers = [parseMovingObjects]
 
 
 
-control_step, graphics_step = 0.025, 0.025 # the car controller operates in 40 Hz by default
+control_step, graphics_step = 1/20, 1/20 # the car controller operates in 40 Hz by default
 xml_filename = os.path.join(xml_path, save_filename)
 
 
@@ -117,7 +118,7 @@ path_points = 2*np.array(
     ]
 )*0.4
 
-path, v = null_infty()
+path, v = null_paperclip()
 car0_trajectory.build_from_points_const_speed(path*1.2, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
@@ -156,7 +157,7 @@ def update_controller_type(state, setpoint, time, i):
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
 
-car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, 0.05)
+car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, 0.001)
 car0.set_controllers(car0_controllers)
 
 
@@ -243,8 +244,7 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     if car0_trajectory.is_finished() or car0_controller.finished == True:
         break
 
-    if freq[-1] < args["MPCC_params"]["freq_limit"]:
-        input("Press enter to continue....(To low computing freq)")
+    
     #update horizon plotter
     horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
     for i in range(car0_controller.parameters.N-1):
@@ -252,7 +252,7 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         x_temp = np.reshape(x_temp, (-1,1))
         horizon = np.append(horizon, x_temp, axis = 1)
     plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
-    
+    #input("Press enter to continue")
 simulator.close()
 
 # plot simulation results
