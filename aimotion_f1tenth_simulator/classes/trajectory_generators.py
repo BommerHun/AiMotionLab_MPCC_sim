@@ -13,8 +13,8 @@ def quat_2_yaw(quat):
 
 def paperclip():
     focus_x = [0, 0]
-    focus_y = [-0.7, 0.7]
-    r = 0.8
+    focus_y = [-1, 1]
+    r = 2
     len_straight = focus_y[1] - focus_y[0]
     len_turn = r * np.pi
     ppm = 6
@@ -39,15 +39,17 @@ def paperclip():
             if np.linalg.norm(point - points[i-1, :]) < 0.1:
                 delete_idx += [i]
     points = np.delete(points, delete_idx, 0)
-    return points
+    vel = np.ones([points.shape[0],1])
+
+    return points, vel
 
 def dented_paperclip():
     focus_x = [0, 0]
-    focus_y = [-1, 1]
-    r = 0.8
+    focus_y = [-2, 2]
+    r = 2
     len_straight = focus_y[1] - focus_y[0]
     len_turn = r * np.pi
-    r_dent = 0.2
+    r_dent = 0.4
     len_dent = cosine_arc_length(r_dent, 2*np.pi/len_straight, 0, len_straight)
     ppm = 4
     num_straight = int(len_straight * ppm)
@@ -72,7 +74,9 @@ def dented_paperclip():
             if np.linalg.norm(point - points[i-1, :]) < 0.1:
                 delete_idx += [i]
     points = np.delete(points, delete_idx, 0)
-    return points
+    vel = np.ones([points.shape[0],1])
+
+    return points, vel
 
 def cosine_arc_length(amplitude, frequency, start, end):
     # Define the derivative of the cosine function
@@ -239,7 +243,7 @@ def eight():
 
 
 def null_paperclip():
-    points = 1.1*np.array([[0,0],
+    points = 1.5*np.array([[0,0],
                        [1*np.cos(-np.pi/4), 1.5+np.sin(-np.pi/4)],
                         [1*np.cos(np.pi/8), 1.5+np.sin(-np.pi/8)],
                        [1, 1.5],

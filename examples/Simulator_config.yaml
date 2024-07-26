@@ -11,10 +11,10 @@ parameter_server:
       C_r: 29.4662
       l_f: 0.163
       l_r: 0.168
-      C_m1: 52.4282
-      C_m2: 5.2465
-      C_m3: 1.1194
-      m: 2.9
+      C_m1: 61.4282
+      C_m2: 3.012
+      C_m3: 0.604
+      m: 2.96
       I_z: 0.0796 # [kg m^2]
 
     controllers:
@@ -55,32 +55,32 @@ parameter_server:
           - 0.0298
           - 0.0095
       MPCC:
-        mu_xi: 1000
-        mu_eta: 10
+        mu_xi: 200
+        mu_eta: 15
         res_limit: 1000.0
-        freq_limit: 10
+        freq_limit: 2
         #Input constraints
         delta_max: 0.6 # [rad]
         d_max: 0.25
         d_min: 0.08       
-        opt_tol: 0.001
+        opt_tol: 0.01
         #Incremental input constraints        
 
-        ddot_max: 10000.0
-        deltadot_max: 10000.0
-        thetahatdot_min: 0.001
-        thetahatdot_max: 5
+        ddot_max: 1000.0
+        deltadot_max: 10.0
+        thetahatdot_min: 0.1
+        thetahatdot_max: 10
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 12 #number of shooting nodes
-        Tf: 0.8 #[s] time lenght of the opt. horizon
+        N: 14 #number of shooting nodes
+        Tf: 0.7 #[s] time lenght of the opt. horizon
         #Cost weights:
-        q_con: 40.0
-        q_long: 30.0
-        q_theta: 3
+        q_con: 80.0
+        q_long: 40.0
+        q_theta: 1.5
         q_d: 0.05
-        q_delta: 0.0075
+        q_delta: 0.05
 
       GP_LPV_LQR:
         GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP
@@ -126,7 +126,7 @@ parameter_server:
 
 
     crazy_observer:
-      CUTOFF: 2.0
+      CUTOFF: 60.5
       FREQUENCY: 20.0
       MARKER_OFFSET: 0.0
     drive_bridge:

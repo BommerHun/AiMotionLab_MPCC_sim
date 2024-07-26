@@ -64,6 +64,7 @@
     <texture name="tex-airport" type="2d" file="textures/airport.png"/>
     <texture name="tex-parking_lot" type="2d" file="textures/parking_lot.png"/>
     <texture name="tex-sztaki" type="2d" file="textures/sztaki.png"/>
+    <texture name="tex-zandvoort" type="2d" file="textures/Zandvoort_map.png"/>
     <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".05"/>
     <material name="mat-carpet" shininess="0.1" texrepeat="0.1308 0.1308" texture="tex-carpet" texuniform="true"/>
     <material name="mat-roundabout" reflectance="0.7" texrepeat="0.667 0.667" texture="tex-roundabout" texuniform="true"/>
@@ -72,6 +73,7 @@
     <material name="mat-airport" reflectance="0.7" texrepeat="9.524 9.524" texture="tex-airport" texuniform="true"/>
     <material name="mat-parking_lot" reflectance="0.7" texrepeat="9.524 8.696" texture="tex-parking_lot" texuniform="true"/>
     <material name="mat-sztaki" reflectance="0.7" texrepeat="9.524 9.524" texture="tex-sztaki" texuniform="true"/>
+    <material name="mat-zandvoort" reflectance="0.7" texrepeat="0.08 0.08" texture="tex-zandvoort" texuniform="true"/>
 
     <texture name="tex_check" builtin="checker" type="2d" width="256" height="256" rgb1=".8 .1 .1" rgb2=".1 .1 .8"/>
     <material name="material_check" texture="tex_check" texrepeat="2 2" texuniform="true"/>
@@ -85,8 +87,8 @@
     <light dir="-.2 1 -.4" diffuse=".9 .9 .9" specular="0.6 0.9 0.6" pos="2 -5 6" cutoff="70"/>
     <light dir="-1.0 -1.0 -.4" diffuse=".9 .9 .9" specular="0.6 0.9 0.6" pos="10 10 6" cutoff="70"/>
     
-    <!--<geom name="roundabout" size="1.5 1.5 .05" quat="0.7071 0 0 0.7071" pos="0 0 0.001" type="plane" material="mat-roundabout" condim="3"/>-->
     <geom name="roundabout" size="1.5 1.5 .05" quat="0.7071 0 0 0.7071" pos="0 0 0.001" type="plane" material="mat-roundabout" condim="3"/>
+    <!--geom name="zandvoort" size="20 20 .05" quat="1 0 0 0" pos="8 0 0.005" type="plane" material="mat-zandvoort" condim="3"/-->
 
     <!--
     <geom name="carpet" size="7.644 7.644 .001" pos="3.16 1.115 0.0005" quat="0.7071 0 0 0.7071" type="plane" material="mat-carpet"/>

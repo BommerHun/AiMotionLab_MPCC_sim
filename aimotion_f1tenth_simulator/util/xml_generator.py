@@ -208,6 +208,11 @@ class SceneXmlGenerator:
         else:
             print("[SceneXmlGenerator] Sztaki already added")
     
+    def add_zandvoort_track(self,pos,quat):
+        name = "zandwoort"
+        #zandvoort = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat)
+        ET.SubElement(self.worldbody, "geom", name = "zandvoort", pos="0 0 1.5", size="0.105 0.105 0.0925", rgba="0.8 0.8 0.8 1.0", material="mat-zandvoort")
+
     
     def add_car(self, pos, quat, color, is_virtual, has_rod=False, type="fleet1tenth", **kwargs):
 

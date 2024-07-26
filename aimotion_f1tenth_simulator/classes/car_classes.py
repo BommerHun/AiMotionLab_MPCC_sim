@@ -10,6 +10,8 @@ import scipy as cp
 import casadi as cs
 from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 from scipy.interpolate import splev
+from scipy.integrate import ode
+
 
 
 class CarTrajectory(TrajectoryBase):
@@ -738,7 +740,7 @@ class Casadi_MPCC:
         self.theta_init[0] = theta_0
         self.start_theta = theta_0
 
-        self.v_t_init = np.zeros(N-1) #Store the initial guess for v_theta
+        self.v_t_init = np.ones(N-1)*0.001 #Store the initial guess for v_theta
 
         
         self.lam_g_init = 0 #What does this do?
@@ -856,10 +858,11 @@ class Casadi_MPCC:
         self.opti.subject_to(self.v_U[:,0] == self.v_U_0+ self.dt*self.U_0) #init virtual input (d & delta)
 
 
-        F_tire = self.get_tireforce(states=self.X[:,:-1], inputs = self.v_U)
+        (F_front, F_rear) = self.get_tireforce(states=self.X[:,:-1], inputs = self.v_U)
 
-        self.opti.subject_to((F_tire <= 1, F_tire >= -1))
-        
+        self.opti.subject_to((F_front < 1, F_front > -1))
+        self.opti.subject_to((F_rear < 1, F_rear > -1))
+
         
         # Dynamic constraint #
 
@@ -952,9 +955,9 @@ class Casadi_MPCC:
         F_reta = self.model.C_r*alpha_r
         F_feta = self.model.C_f*alpha_f
 
-        F_tire = F_xi**2/self.MPCC_params["mu_xi"]+F_reta**2/self.MPCC_params["mu_eta"]
-        
-        return F_tire
+        F_front = F_xi**2/self.MPCC_params["mu_xi"]**2+F_feta**2/self.MPCC_params["mu_eta"]**2
+        F_rear = F_xi**2/self.MPCC_params["mu_xi"]**2+F_reta**2/self.MPCC_params["mu_eta"]**2
+        return F_front, F_rear
 
     def cost(self):
         """
@@ -964,9 +967,14 @@ class Casadi_MPCC:
         e_l = self.e_l(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
         e_c = self.e_c(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
         
-        e_smooth = self.e_smooth()[0]*self.q_d + self.e_smooth()[1]*self.q_delta
+        e_smooth = self.e_smooth()
+        e_smooth = e_smooth[0]*self.q_d + e_smooth[1]*self.q_delta
         
-        cost = self.q_l * e_l.T @ e_l + self.q_c * e_c.T @ e_c- self.q_t * (self.v_t.T @ self.v_t) + e_smooth 
+        #        cost = e_c**2*self.parameters.q_con+e_l**2*self.parameters.q_lat-thetahatdot*self.parameters.q_theta+self.parameters.q_d*ddot**2+self.parameters.q_delta*deltadot**2
+
+        e_progress = cs.sum1(cs.fabs(self.v_t))
+
+        cost = self.q_l * e_l**2 + self.q_c* e_c**2- self.q_t * e_progress + e_smooth 
         #cost = self.q_l * e_l + self.q_c * e_c- self.q_t * (self.trajectory.L-self.theta[-1]) + self.q_smooth  * e_smooth
 
         return cost
@@ -974,14 +982,26 @@ class Casadi_MPCC:
     def e_smooth(self):
         """
         This function puts the to the rows of the input (dd and ddelta) above each other in a vector and returns it
+        #TODO new subscript
         """
 
-        d = cs.vec(self.U[0,:])
+        dd = cs.vec(cs.fabs(self.U[0,:]))
 
-        delta = cs.vec(self.U[1,:])
+        ddelta = cs.vec(cs.fabs(self.U[1,:]))
+
+        #d = cs.fabs(d)
+
+        #d = cs.sum1(d)
 
 
-        e_smooth = np.array([d.T @ d, delta.T @ delta])  #Basically I calculate the lenght^2 of the the d and the delta vectors and add them together
+        #delta = cs.fabs(delta)
+
+        #delta = cs.sum1(delta)
+
+
+        e_smooth = (cs.dot(dd,dd), cs.dot(ddelta,ddelta))
+        
+        #e_smooth = (cs.sum1(dd), cs.sum1((ddelta)))
         #This way e_smoot is always >= 0
 
         return e_smooth
@@ -996,8 +1016,12 @@ class Casadi_MPCC:
         point_r, v = self.est_ref_pos(theta)
         n = cs.hcat((v[:, 1], -v[:, 0]))
         e_c = (point_r-point)*n.T
-        e_c = cs.vec(e_c[0, :] + e_c[1, :])
-        #e_c = e_c.T @ e_c
+
+
+        #e_c = cs.vec(e_c[0, :] + e_c[1, :])
+
+        e_c = cs.dot(n.T,(point_r-point))
+
         return e_c
 
     def e_l(self, point, theta):
@@ -1009,7 +1033,10 @@ class Casadi_MPCC:
         """
         point_r, v = self.est_ref_pos(theta)
         e_l = (point_r-point)*v.T
-        e_l = cs.vec(e_l[0, :]+e_l[1, :])
+        #e_l = cs.vec(e_l[0, :]+e_l[1, :])
+        
+        e_l = cs.dot(v.T,(point_r-point))
+
         #e_l = e_l.T @ e_l
         return e_l
 
@@ -1139,6 +1166,7 @@ class CarMPCCController(ControllerBase):
         self.trajectory = None
 
         self.theta = 0.0
+        self.theta_dot = 0.0
         self.s_start = 0.0
         self.x0 = np.zeros((1,6))
 
@@ -1156,6 +1184,7 @@ class CarMPCCController(ControllerBase):
 
         self.alpha = 1
         self.prev_state = np.array([])
+
 
     def load_parameters(self):
         """
@@ -1221,9 +1250,16 @@ class CarMPCCController(ControllerBase):
         :return finished (trajectory execution finished)
         """
 
-        
+       
 
         x0 = np.array([x0["pos_x"], x0["pos_y"], x0["head_angle"], x0["long_vel"], x0["lat_vel"], x0["yaw_rate"]])
+
+        while x0[2]-self.prev_phi > np.pi:
+            x0[2] = x0[2]-2*np.pi
+        while x0[2]-self.prev_phi < -np.pi:
+            x0[2] = x0[2]+2*np.pi
+
+        self.prev_phi = x0[2]
 
         x0[4] = self.alpha*x0[4]+(1-self.alpha)*self.prev_state[4]
         x0[5] = self.alpha*x0[5]+(1-self.alpha)*self.prev_state[5]
@@ -1233,7 +1269,7 @@ class CarMPCCController(ControllerBase):
         #x0[5] = x0[5]*np.random.normal(1,0.1)
         self.prev_state = x0
 
-        if self.theta >= self.trajectory.L:
+        if self.theta >= self.trajectory.L*0.999:
             errors = np.array([0.0, 0.0,0.0,float(self.theta), 0.0])
             u_opt = np.array([0,0])
             self.input = np.array([0,0])
@@ -1241,20 +1277,15 @@ class CarMPCCController(ControllerBase):
 
             self.finished = True
             return u_opt
-        #if x0[3] <0.1:
-        #    x0[3] = 0.1
+        #if x0[3] <0.01:
+        #    x0[3] = 0.01
 
         x0 = np.concatenate((x0, np.array([self.theta]), self.input))
 
-        #TODO implement unwrap
+        
 
         
-        while x0[2]-self.prev_phi > np.pi:
-            x0[2] = x0[2]-2*np.pi
-        while x0[2]-self.prev_phi < -np.pi:
-            x0[2] = x0[2]+2*np.pi
-
-        self.prev_phi = x0[2]
+        
 
         self.ocp_solver.set(0, 'lbx', x0)
         self.ocp_solver.set(0, 'ubx', x0)
@@ -1271,12 +1302,15 @@ class CarMPCCController(ControllerBase):
                 break #Tolerance limit reached
             if t > 1/150: #If the controller frequency is below 60 Hz break
                 if self.muted == False:
-                    print("\nTime limit reached: 150Hz\n")
-                
+                    #print("\nTime limit reached: 150Hz\n")
+                    pass
 
         x_opt = np.reshape(self.ocp_solver.get(1, "x"),(-1,1)) #Full predictied optimal state vector (x,y,phi, vxi, veta, omega, thetahat, d, delta)
-        self.theta = x_opt[6,0]
         self.input = x_opt[7:, 0]
+
+        x_opt = np.reshape(self.ocp_solver.get(2, "x"),(-1,1)) #Full predictied optimal state vector (x,y,phi, vxi, veta, omega, thetahat, d, delta)
+        self.theta = np.reshape(self.ocp_solver.get(2, "x"),(-1,1))[6,0]
+
         u_opt = np.reshape(self.ocp_solver.get(0, "x"),(-1,1))[7:,0]
         if (1/t < self.MPCC_params["freq_limit"]) or (max(res) > self.MPCC_params["res_limit"]):
             raise Exception(f"Slow computing, emergency shut down, current freq: {1/t}, residuals: {res}")
@@ -1300,6 +1334,7 @@ class CarMPCCController(ControllerBase):
 
         self.errors = {"lateral" : float(e_con), "heading" : float(self.theta), "velocity" : float(x_opt[3,0]), "longitudinal": float(e_long)}
         self.freq = 1/t
+        self.theta_dot = self.ocp_solver.get(0, "u")[0]
         return u_opt
 
         
@@ -1445,9 +1480,10 @@ class CarMPCCController(ControllerBase):
         model.u = cs.vertcat(thetahatdot, ddot, deltadot)
 
         #Tire-force ellipse:
-        F_tire = Fxi**2/self.MPCC_params["mu_xi"]+Freta**2/self.MPCC_params["mu_eta"]
+        F_rear = Fxi**2/self.MPCC_params["mu_xi"]**2+Freta**2/self.MPCC_params["mu_eta"]**2
+        F_front = Fxi**2/self.MPCC_params["mu_xi"]**2+Ffeta**2/self.MPCC_params["mu_eta"]**2
 
-        model.con_h_expr = cs.vertcat(F_tire)
+        model.con_h_expr = cs.vertcat(F_front, F_rear)
 
         """Explicit expression:"""
 
@@ -1481,7 +1517,7 @@ class CarMPCCController(ControllerBase):
 
         e_c = self._cost_e_c(point,theta)
         e_l = self._cost_e_l(point,theta)
-        cost = e_c**2*self.parameters.q_con+e_l**2*self.parameters.q_lat-thetahatdot*self.parameters.q_theta+self.parameters.q_d*ddot**2+self.parameters.q_delta*deltadot**2
+        cost = e_c**2*self.parameters.q_con+e_l**2*self.parameters.q_lat-thetahatdot*self.parameters.q_theta+self.parameters.q_d*cs.fabs(ddot)+self.parameters.q_delta*cs.fabs(deltadot)
         return cost
 
 
@@ -1565,18 +1601,18 @@ class CarMPCCController(ControllerBase):
 
 
         """using non-linear constraints:"""
-        ocp.constraints.lh = np.array([-1])
-        ocp.constraints.uh = np.array([1])
+        ocp.constraints.lh = np.array([-1,-1])
+        ocp.constraints.uh = np.array([1,1])
 
-        ocp.cost.zl = np.array([0.1])  # lower slack penalty
-        ocp.cost.zu = np.array([0.1])  # upper slack penalty
-        ocp.cost.Zl = np.array([0.5])  # lower slack weight
-        ocp.cost.Zu = np.array([0.5])  # upper slack weight
+        ocp.cost.zl = np.array([50000,50000])  # lower slack penalty
+        ocp.cost.zu = np.array([50000,50000])  # upper slack penalty
+        ocp.cost.Zl = np.array([100000,100000])  # lower slack weight
+        ocp.cost.Zu = np.array([100000,100000])  # upper slack weight
 
         ## Initialize slack variables for lower and upper bounds
-        ocp.constraints.lsh = np.zeros(1)
-        ocp.constraints.ush = np.zeros(1)
-        ocp.constraints.idxsh = np.arange(1)
+        ocp.constraints.lsh = np.zeros(2)
+        ocp.constraints.ush = np.zeros(2)
+        ocp.constraints.idxsh = np.arange(2)
         #x0 = np.array((float(self.trajectory.spl_sx(self.s_start)), #x
         #            float(self.trajectory.spl_sy(self.s_start)), #y
         #            phi0,#phi
@@ -1608,10 +1644,11 @@ class CarMPCCController(ControllerBase):
 
         self.theta = theta_start
         self.s_start = theta_start
-        
+        self.theta_dot = 0.0
+
         self.x0 = x0 #The current position must be the initial condition
         self.prev_phi = x0[2]
-        self.x0[3] = 0.01 #Give a small forward speed to make the problem feasable
+        self.x0[3] = 0.001 #Give a small forward speed to make the problem feasable
         self.x0[5] = 0
         self.x0[4] = 0
 
@@ -1727,3 +1764,18 @@ class CarMPCCController(ControllerBase):
             states_next = states + dt*self.nonlin_dynamics(t, states, inputs)
             t_next = t + dt
         return states_next, t_next
+    
+    def simulate(self, states, inputs, dt, t=0):
+        """
+        Class method for simulating the f1tenth vehicle
+        :param states: State vector
+        :param inputs: Input vector
+        :param dt: integration time
+        :param t: t_0
+        :return states: State vector at t+dt time step
+        :return t: t_0+dt
+        """
+        sim = ode(self.nonlin_dynamics).set_integrator('lsoda')
+        sim.set_initial_value(states, t).set_f_params(inputs)
+
+        return sim.integrate(dt), sim.t+dt

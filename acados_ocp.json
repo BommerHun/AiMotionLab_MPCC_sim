@@ -49,7 +49,8 @@
         "idxsg": [],
         "idxsg_e": [],
         "idxsh": [
-            0
+            0,
+            1
         ],
         "idxsh_0": [],
         "idxsh_e": [],
@@ -57,9 +58,9 @@
         "idxsphi_0": [],
         "idxsphi_e": [],
         "lbu": [
-            0.001,
-            -10000.0,
-            -10000.0
+            0.1,
+            -1000.0,
+            -10.0
         ],
         "lbx": [
             0.0,
@@ -70,10 +71,10 @@
             0.0,
             0.0,
             0.64424,
-            0.01,
-            0.0,
-            0.0,
             0.001,
+            0.0,
+            0.0,
+            0.05,
             0.25,
             0.0
         ],
@@ -81,6 +82,7 @@
         "lg": [],
         "lg_e": [],
         "lh": [
+            -1,
             -1
         ],
         "lh_0": [],
@@ -94,6 +96,7 @@
         "lsg": [],
         "lsg_e": [],
         "lsh": [
+            0.0,
             0.0
         ],
         "lsh_0": [],
@@ -102,12 +105,12 @@
         "lsphi_0": [],
         "lsphi_e": [],
         "ubu": [
-            5.0,
-            10000.0,
-            10000.0
+            10.0,
+            1000.0,
+            10.0
         ],
         "ubx": [
-            26.485408438334503,
+            35.97319374942814,
             0.25,
             0.6
         ],
@@ -115,10 +118,10 @@
             0.0,
             0.0,
             0.64424,
-            0.01,
-            0.0,
-            0.0,
             0.001,
+            0.0,
+            0.0,
+            0.05,
             0.25,
             0.0
         ],
@@ -126,6 +129,7 @@
         "ug": [],
         "ug_e": [],
         "uh": [
+            1,
             1
         ],
         "uh_0": [],
@@ -139,6 +143,7 @@
         "usg": [],
         "usg_e": [],
         "ush": [
+            0.0,
             0.0
         ],
         "ush_0": [],
@@ -159,12 +164,14 @@
         "W_0": [],
         "W_e": [],
         "Zl": [
-            0.5
+            100000,
+            100000
         ],
         "Zl_0": [],
         "Zl_e": [],
         "Zu": [
-            0.5
+            100000,
+            100000
         ],
         "Zu_0": [],
         "Zu_e": [],
@@ -178,12 +185,14 @@
         "yref_0": [],
         "yref_e": [],
         "zl": [
-            0.1
+            50000,
+            50000
         ],
         "zl_0": [],
         "zl_e": [],
         "zu": [
-            0.1
+            50000,
+            50000
         ],
         "zu_0": [],
         "zu_e": []
@@ -193,7 +202,7 @@
         "/usr/include/python3.10"
     ],
     "dims": {
-        "N": 12,
+        "N": 14,
         "nbu": 3,
         "nbx": 3,
         "nbx_0": 9,
@@ -201,7 +210,7 @@
         "nbxe_0": 9,
         "ng": 0,
         "ng_e": 0,
-        "nh": 1,
+        "nh": 2,
         "nh_0": 0,
         "nh_e": 0,
         "np": 0,
@@ -211,7 +220,7 @@
         "nr": 0,
         "nr_0": 0,
         "nr_e": 0,
-        "ns": 1,
+        "ns": 2,
         "ns_0": 0,
         "ns_e": 0,
         "nsbu": 0,
@@ -219,7 +228,7 @@
         "nsbx_e": 0,
         "nsg": 0,
         "nsg_e": 0,
-        "nsh": 1,
+        "nsh": 2,
         "nsh_0": 0,
         "nsh_e": 0,
         "nsphi": 0,
@@ -234,7 +243,7 @@
     },
     "json_file": "acados_ocp.json",
     "model": {
-        "con_h_expr": "((sq((((52.4282*d)-(5.2465*vxi))-(1.1194*vxi)))/1000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/10))",
+        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), vertcat(((sq(@1)/40000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/225)), ((sq(@1)/40000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/225)))",
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -249,8 +258,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.05*sq(ddot)))+(0.0075*sq(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(30*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.05*sq(ddot)))+(0.0075*sq(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -270,7 +279,7 @@
         "dyn_disc_fun_jac_hess": null,
         "dyn_ext_fun_type": "casadi",
         "dyn_generic_source": null,
-        "f_expl_expr": "@1=(((52.4282*d)-(5.2465*vxi))-(1.1194*vxi)), @2=(41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))), @3=(29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))), vertcat(((vxi*cos(phi))-(veta*sin(phi))), ((vxi*sin(phi))+(veta*cos(phi))), omega, (0.344828*(((@1+(@1*cos(delta)))-(@2*sin(delta)))+((2.9*veta)*omega))), (0.344828*(((@3+(@1*sin(delta)))+(@2*cos(delta)))-((2.9*vxi)*omega))), (12.5628*((((0.163*@2)*cos(delta))+((0.163*@1)*sin(delta)))-(0.168*@3))), thetadot, ddot, deltadot)",
+        "f_expl_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), @2=(41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))), @3=(29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))), vertcat(((vxi*cos(phi))-(veta*sin(phi))), ((vxi*sin(phi))+(veta*cos(phi))), omega, (0.337838*(((@1+(@1*cos(delta)))-(@2*sin(delta)))+((2.96*veta)*omega))), (0.337838*(((@3+(@1*sin(delta)))+(@2*cos(delta)))-((2.96*vxi)*omega))), (12.5628*((((0.163*@2)*cos(delta))+((0.163*@1)*sin(delta)))-(0.168*@3))), thetadot, ddot, deltadot)",
         "f_impl_expr": null,
         "gnsf": {
             "nontrivial_f_LO": 1,
@@ -293,7 +302,7 @@
     "problem_class": "OCP",
     "shared_lib_ext": ".so",
     "solver_options": {
-        "Tsim": 0.06666666666666667,
+        "Tsim": 0.049999999999999996,
         "alpha_min": 0.05,
         "alpha_reduction": 0.7,
         "as_rti_iter": 1,
@@ -346,20 +355,24 @@
         "rti_log_residuals": 0,
         "shooting_nodes": [
             0.0,
-            0.06666666666666667,
-            0.13333333333333333,
-            0.2,
-            0.26666666666666666,
-            0.3333333333333333,
+            0.049999999999999996,
+            0.09999999999999999,
+            0.15,
+            0.19999999999999998,
+            0.24999999999999997,
+            0.3,
+            0.35,
             0.39999999999999997,
-            0.4666666666666666,
-            0.5333333333333333,
+            0.44999999999999996,
+            0.49999999999999994,
+            0.5499999999999999,
             0.6,
-            0.6666666666666666,
-            0.7333333333333333,
-            0.7999999999999999
+            0.65,
+            0.7000000000000001
         ],
         "sim_method_jac_reuse": [
+            0,
+            0,
             0,
             0,
             0,
@@ -387,6 +400,8 @@
             4,
             4,
             4,
+            4,
+            4,
             4
         ],
         "sim_method_num_steps": [
@@ -401,22 +416,26 @@
             1,
             1,
             1,
+            1,
+            1,
             1
         ],
-        "tf": 0.8,
+        "tf": 0.7,
         "time_steps": [
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996,
+            0.049999999999999996
         ],
         "with_solution_sens_wrt_params": false,
         "with_value_sens_wrt_params": false
