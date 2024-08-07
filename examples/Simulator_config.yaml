@@ -55,7 +55,7 @@ parameter_server:
           - 0.0298
           - 0.0095
       MPCC:
-        mu_xi: 200
+        mu_xi: 50
         mu_eta: 15
         res_limit: 1000.0
         freq_limit: 2
@@ -73,14 +73,14 @@ parameter_server:
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 14 #number of shooting nodes
-        Tf: 0.7 #[s] time lenght of the opt. horizon
+        N: 12 #number of shooting nodes
+        Tf: 0.6 #[s] time lenght of the opt. horizon
         #Cost weights:
-        q_con: 80.0
-        q_long: 40.0
-        q_theta: 1.5
-        q_d: 0.05
-        q_delta: 0.05
+        q_con: 100.0
+        q_long: 200.0
+        q_theta: 2
+        q_d: 0.0005
+        q_delta: 0.0005
 
       GP_LPV_LQR:
         GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP

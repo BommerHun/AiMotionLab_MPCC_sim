@@ -7,14 +7,15 @@ from scipy.signal import butter, filtfilt
 from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 from aimotion_f1tenth_simulator.util import xml_generator
 from aimotion_f1tenth_simulator.classes.car import Car
-from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarLPVController, CarMPCCController
+from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarMPCCController
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty, dented_paperclip, paperclip
 from aimotion_f1tenth_simulator.classes.original_trajectories import race_track
+from aimotion_f1tenth_simulator.classes.car_classes import Theta_opt
 import yaml
-
+from scipy.interpolate import splev
 
 alpha = 1
 omega_filt = 0
@@ -46,8 +47,8 @@ wheel_radius = ".072388"
 # create xml with a car
 scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 #heading: 0.64424
-car0_name = scene.add_car(pos="0 0 0",
-                          quat=carHeading2quaternion(0.64424),
+car0_name = scene.add_car(pos="0.1 0.3 0",
+                          quat=carHeading2quaternion(0.7),
                           color=RED_COLOR,
                           is_virtual=True,
                           has_rod=False,)
@@ -59,7 +60,7 @@ car0_name = scene.add_car(pos="0 0 0",
 
 
 
-x0 = np.array([0, 0,0.64424,0,0,0])
+x0 = np.array([0.1, 0.3,0.7,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -102,7 +103,10 @@ car0_trajectory.build_from_points_const_speed(path*1.2, path_smoothing=0.01, pat
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 #car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
 
-#MPCC modifications:
+
+theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
+
+theta0 = theta_finder.solve()
 
 
 #car0_controller = CarLPVController() # init controller
@@ -133,7 +137,7 @@ def update_controller_type(state, setpoint, time, i):
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
 
-car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, 0.05)
+car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, theta0)
 car0.set_controllers(car0_controllers)
 
 
@@ -150,7 +154,18 @@ plotter.set_ref_traj(np.array(car0_controller.trajectory.spl_sx(s)), np.array(ca
 
 plotter.show()
 
+x_ref, y_ref = (car0_controller.trajectory.spl_sx(car0_controller.theta),car0_controller.trajectory.spl_sy(car0_controller.theta))
+plotter.set_ref_point(np.array(float(x_ref)), np.array(float(y_ref)))
+#update horizon plotter
+horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
+for i in range(car0_controller.parameters.N-1):
+    x_temp   = car0_controller.ocp_solver.get(i+1, 'x')
+    x_temp = np.reshape(x_temp, (-1,1))
+    horizon = np.append(horizon, x_temp, axis = 1)
+plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
 
+
+#input()
 # start simulation and collect position data
 x = []
 y = []
@@ -158,7 +173,7 @@ v_xi = []
 v_eta = []
 phi = []
 omega = []
-lateral_errors = []
+contouring_errors = []
 longitudinal_errors = []
 theta = []
 theta_dot = []
@@ -194,36 +209,11 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         simulator.update()
     else:
         simulator.update_()
-    """
-    st=car0.get_state() # states corresponding to a dynamic single track representation
-    
-    omega_filt = st["yaw_rate"]*alpha   + (1-alpha)*omega_filt
-    v_eta_filt = st["lat_vel"]*alpha   + (1-alpha)*v_eta_filt
-    st["yaw_rate"] = omega_filt
-    st["lat_vel"] = v_eta_filt
-
-    phi_cur = st["head_angle"]
-
-    while phi_cur-phi_prev > np.pi:
-        phi_cur = phi_cur-2*np.pi
-    while phi_cur-phi_prev < -np.pi:
-        phi_cur = phi_cur+2*np.pi
-    
-
-    st["head_angle"] = phi_cur
-    phi_prev = phi_cur
-    x.append(st["pos_x"])
-    y.append(st["pos_y"])
-    v_xi.append(st["long_vel"])
-    v_eta.append(st["lat_vel"])
-    phi.append(st["head_angle"])
-    omega.append(st["yaw_rate"])
-    """
-    
+  
     st = car0_controller.prev_state
-
-    x_ref, y_ref = (car0_controller.trajectory.spl_sx(car0_controller.theta),car0_controller.trajectory.spl_sy(car0_controller.theta))
-    plotter.set_ref_point(np.array(float(x_ref)), np.array(float(y_ref)))
+    
+    (x_ref, y_ref) = splev(car0_controller.state_vector[6,:], car0_trajectory.pos_tck)
+    plotter.set_ref_point(x_ref, y_ref)
 
     (x0, args) = car0_controller.simulate(states = st, inputs = car0_controller.input, dt = car0_controller.MPCC_params["Tf"]/ car0_controller.MPCC_params["N"])
 
@@ -246,7 +236,7 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
 
     # get errors
     errors = car0_controller.get_errors()
-    lateral_errors.append(errors["lateral"])
+    contouring_errors.append(errors["contouring"])
     longitudinal_errors.append(errors["longitudinal"])
     
     freq.append(car0_controller.freq)
@@ -291,7 +281,7 @@ plt.show(block=False)
 
 
 fix, axs = plt.subplots(2, 1)
-axs[0].plot(t,lateral_errors)
+axs[0].plot(t,contouring_errors)
 axs[0].set_ylabel("Lateral error (m)")
 axs[0].set_xlabel("Time (s)")
 axs[1].plot(t,longitudinal_errors)

@@ -1,7 +1,7 @@
 {
     "acados_include_path": "/home/bodlaire/acados/include",
     "acados_lib_path": "/home/bodlaire/acados/lib",
-    "code_export_directory": "/home/bodlaire/aimotion-f1tenth-simulator/c_generated_code",
+    "code_export_directory": "/home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/c_generated_code",
     "constraints": {
         "C": [],
         "C_e": [],
@@ -68,13 +68,13 @@
             -0.6
         ],
         "lbx_0": [
-            0.0,
-            0.0,
-            0.64424,
+            0.1,
+            0.3,
+            0.7,
             0.001,
             0.0,
             0.0,
-            0.05,
+            0.1588926954156183,
             0.25,
             0.0
         ],
@@ -115,13 +115,13 @@
             0.6
         ],
         "ubx_0": [
-            0.0,
-            0.0,
-            0.64424,
+            0.1,
+            0.3,
+            0.7,
             0.001,
             0.0,
             0.0,
-            0.05,
+            0.1588926954156183,
             0.25,
             0.0
         ],
@@ -198,11 +198,11 @@
         "zu_e": []
     },
     "cython_include_dirs": [
-        "/home/bodlaire/aimotion-f1tenth-simulator/venv/lib/python3.10/site-packages/numpy/_core/include",
+        "/home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/venv/lib/python3.10/site-packages/numpy/_core/include",
         "/usr/include/python3.10"
     ],
     "dims": {
-        "N": 14,
+        "N": 12,
         "nbu": 3,
         "nbx": 3,
         "nbx_0": 9,
@@ -243,7 +243,7 @@
     },
     "json_file": "acados_ocp.json",
     "model": {
-        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), vertcat(((sq(@1)/40000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/225)), ((sq(@1)/40000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/225)))",
+        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), vertcat(((sq(@1)/2500)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/225)), ((sq(@1)/2500)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/225)))",
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -258,8 +258,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(40*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.*thetadot))+(0.0005*fabs(ddot)))+(0.0005*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.*thetadot))+(0.0005*fabs(ddot)))+(0.0005*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -366,13 +366,9 @@
             0.44999999999999996,
             0.49999999999999994,
             0.5499999999999999,
-            0.6,
-            0.65,
-            0.7000000000000001
+            0.6
         ],
         "sim_method_jac_reuse": [
-            0,
-            0,
             0,
             0,
             0,
@@ -400,8 +396,6 @@
             4,
             4,
             4,
-            4,
-            4,
             4
         ],
         "sim_method_num_steps": [
@@ -416,14 +410,10 @@
             1,
             1,
             1,
-            1,
-            1,
             1
         ],
-        "tf": 0.7,
+        "tf": 0.6,
         "time_steps": [
-            0.049999999999999996,
-            0.049999999999999996,
             0.049999999999999996,
             0.049999999999999996,
             0.049999999999999996,
