@@ -12,7 +12,7 @@ from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty, dented_paperclip, paperclip
-from aimotion_f1tenth_simulator.classes.original_trajectories import race_track
+from aimotion_f1tenth_simulator.classes.original_trajectories import race_track, hungaroring
 from aimotion_f1tenth_simulator.classes.car_classes import Theta_opt
 import yaml
 from scipy.interpolate import splev
@@ -25,6 +25,8 @@ GUI = True # if True the simulator window will be visible, if False the simulato
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
 
+
+#Hungaroring: starting point: (DM(9.64919), DM(-9.28979), DM(2.45226))
 
 
 # the XML generator will create the scene for the simulation. All the XML files and the dependencies are located
@@ -47,8 +49,12 @@ wheel_radius = ".072388"
 # create xml with a car
 scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 #heading: 0.64424
-car0_name = scene.add_car(pos="0.1 0.3 0",
-                          quat=carHeading2quaternion(0.7),
+
+#"31.57 -31.3018 0" 2.4525 HUNGARORING
+# "0 0 0" 0.64424 null_eight/null_paperclip
+
+car0_name = scene.add_car(pos="0 0 0",
+                          quat=carHeading2quaternion(0.64424),
                           color=RED_COLOR,
                           is_virtual=True,
                           has_rod=False,)
@@ -60,7 +66,7 @@ car0_name = scene.add_car(pos="0.1 0.3 0",
 
 
 
-x0 = np.array([0.1, 0.3,0.7,0,0,0])
+x0 = np.array([0, 0, 0.64424,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -97,8 +103,8 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 car0_trajectory=CarTrajectory()
 
 
-path, v = null_infty()
-car0_trajectory.build_from_points_const_speed(path*1.2, path_smoothing=0.01, path_degree=4, const_speed=1.5)
+path, v = null_paperclip()
+car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 #car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
@@ -147,9 +153,16 @@ car0.set_controllers(car0_controllers)
 plotter = MPCC_plotter()
 
 s = np.linspace(0, car0_controller.trajectory.L,10000)
-
-
-
+"""
+plt.title("1/10 scale Hungaroring race track layout")
+plt.xlabel("x [m]")
+plt.ylabel("y [m]")
+plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)))
+plt.axis("equal")
+plt.xlim((-15,100))
+plt.ylim((-50,70))
+plt.show()
+"""
 plotter.set_ref_traj(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)))
 
 plotter.show()
@@ -269,13 +282,17 @@ simulator.close()
 
 # plot simulation results
 plt.figure()
-plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)), "b")
-plt.plot(x,y, "r")
-plt.plot(din_sim_data["x"], din_sim_data["y"], "g")
+plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)), "b", label = "Reference trajectory")
+plt.plot(x,y, "r", label = "Vehicle trajectory")
+plt.legend(loc = "upper left")
+plt.axis("equal")
+plt.xlim((-15,100))
+plt.ylim((-50,70))
+#plt.plot(din_sim_data["x"], din_sim_data["y"], "g")
 plt.axis('equal')
-plt.xlabel("x (m)")
-plt.ylabel("y (m)")
-plt.title("Trajectory")
+plt.xlabel("x [m]")
+plt.ylabel("y [m]")
+plt.title("Simulation result")
 plt.show(block=False)
 
 

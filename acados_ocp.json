@@ -68,14 +68,14 @@
             -0.6
         ],
         "lbx_0": [
-            0.1,
-            0.3,
-            0.7,
+            0.0,
+            0.0,
+            0.64424,
             0.001,
             0.0,
             0.0,
-            0.1588926954156183,
-            0.25,
+            3.318577544280524e-05,
+            0.2,
             0.0
         ],
         "lbx_e": [],
@@ -105,24 +105,24 @@
         "lsphi_0": [],
         "lsphi_e": [],
         "ubu": [
-            10.0,
+            15.0,
             1000.0,
             10.0
         ],
         "ubx": [
-            35.97319374942814,
-            0.25,
+            30.1041115830187,
+            0.2,
             0.6
         ],
         "ubx_0": [
-            0.1,
-            0.3,
-            0.7,
+            0.0,
+            0.0,
+            0.64424,
             0.001,
             0.0,
             0.0,
-            0.1588926954156183,
-            0.25,
+            3.318577544280524e-05,
+            0.2,
             0.0
         ],
         "ubx_e": [],
@@ -243,7 +243,7 @@
     },
     "json_file": "acados_ocp.json",
     "model": {
-        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), vertcat(((sq(@1)/2500)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/225)), ((sq(@1)/2500)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/225)))",
+        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*vxi)), vertcat(((sq(@1)/2500)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/2500)), ((sq(@1)/2500)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/2500)))",
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -258,8 +258,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.*thetadot))+(0.0005*fabs(ddot)))+(0.0005*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.*thetadot))+(0.0005*fabs(ddot)))+(0.0005*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((80*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(3*thetadot))+(0.05*fabs(ddot)))+(0.05*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
