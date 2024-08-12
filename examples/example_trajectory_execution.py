@@ -53,8 +53,8 @@ scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 #"31.57 -31.3018 0" 2.4525 HUNGARORING
 # "0 0 0" 0.64424 null_eight/null_paperclip
 
-car0_name = scene.add_car(pos="0 0 0",
-                          quat=carHeading2quaternion(0.64424),
+car0_name = scene.add_car(pos="31.57 -31.3018 0",
+                          quat=carHeading2quaternion(2.4525),
                           color=RED_COLOR,
                           is_virtual=True,
                           has_rod=False,)
@@ -66,7 +66,7 @@ car0_name = scene.add_car(pos="0 0 0",
 
 
 
-x0 = np.array([0, 0, 0.64424,0,0,0])
+x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -103,7 +103,7 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 car0_trajectory=CarTrajectory()
 
 
-path, v = null_paperclip()
+path, v = hungaroring()
 car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)

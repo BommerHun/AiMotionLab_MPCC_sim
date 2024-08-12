@@ -61,7 +61,7 @@ parameter_server:
         freq_limit: 2
         #Input constraints
         delta_max: 0.6 # [rad]
-        d_max: 0.2
+        d_max: 0.5
         d_min: 0.08       
         opt_tol: 0.01
         #Incremental input constraints        
@@ -73,14 +73,14 @@ parameter_server:
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 12 #number of shooting nodes
-        Tf: 0.6 #[s] time lenght of the opt. horizon
+        N: 14 #number of shooting nodes
+        Tf: 0.8 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 80.0
         q_long: 100.0
         q_theta: 3
         q_d: 0.05
-        q_delta: 0.05
+        q_delta: 5
 
       GP_LPV_LQR:
         GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP

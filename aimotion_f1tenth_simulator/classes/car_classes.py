@@ -1382,7 +1382,7 @@ class CarMPCCController(ControllerBase):
 
         #Wheel forces
 
-        Fxi = C_m1*d-C_m2*vxi-vxi*C_m3
+        Fxi = C_m1*d-C_m2*vxi-cs.sign(vxi)*C_m3
 
         Freta = C_r * alpha_r
         Ffeta = C_f*alpha_f
