@@ -18,50 +18,14 @@ parameter_server:
       I_z: 0.0796 # [kg m^2]
 
     controllers:
-      LPV_LQR:
-        FREQUENCY: 60.0
-        LATERAL_CONTROL_GAINS:
-          k1:
-          - 0.00266
-          - -0.0168
-          - 0.0368
-          - 0.0357
-          k1_r:
-          - -0.0008
-          - 0.0442
-          - -1.2247
-          k2:
-          - 0.0424
-          - -0.268
-          - 0.588
-          - 0.57
-          k2_r:
-          - -0.0002
-          - 0.0191
-          - -0.9531
-          k3:
-          - 0.00952
-          - -0.109
-          - 0.469
-          - 0.0322
-        LONGITUDINAL_CONTROL_GAINS:
-
-          k1:
-          - 0.0001
-          - -0.0014
-          - 0.0908
-          k2:
-          - -0.0025
-          - 0.0298
-          - 0.0095
       MPCC:
-        mu_xi: 50
-        mu_eta: 50
+        mu_xi: 20
+        mu_eta: 20
         res_limit: 1000.0
         freq_limit: 2
         #Input constraints
         delta_max: 0.6 # [rad]
-        d_max: 0.5
+        d_max: 0.25
         d_min: 0.08       
         opt_tol: 0.01
         #Incremental input constraints        
@@ -73,56 +37,14 @@ parameter_server:
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 14 #number of shooting nodes
-        Tf: 0.8 #[s] time lenght of the opt. horizon
+        N: 20 #number of shooting nodes
+        Tf: 1 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 80.0
-        q_long: 100.0
-        q_theta: 3
-        q_d: 0.05
-        q_delta: 5
-
-      GP_LPV_LQR:
-        GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP
-        FREQUENCY: 60.0
-        NUM_OF_INDUCING: 30
-        BATCH_SIZE: 5
-        RETRAIN_ITER: 5
-        FORGETTING_FACTOR: 0.97
-        CONFIDENCE: 0.9
-        LATERAL_CONTROL_GAINS:
-          k1:
-          - 0.00266
-          - -0.0168
-          - 0.0368
-          - 0.0357
-          k1_r:
-          - -0.0008
-          - 0.0442
-          - -1.2247
-          k2:
-          - 0.0424
-          - -0.268
-          - 0.588
-          - 0.57
-          k2_r:
-          - -0.0002
-          - 0.0191
-          - -0.9531
-          k3:
-          - 0.00952
-          - -0.109
-          - 0.469
-          - 0.0322
-        LONGITUDINAL_CONTROL_GAINS:
-          k1:
-          - 0.0001
-          - -0.0014
-          - 0.0908
-          k2:
-          - -0.0025
-          - 0.0298
-          - 0.0095
+        q_long: 120.0
+        q_theta: 2
+        q_d: 0.005
+        q_delta: 0.005
 
 
     crazy_observer:

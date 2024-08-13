@@ -53,8 +53,8 @@ scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 #"31.57 -31.3018 0" 2.4525 HUNGARORING
 # "0 0 0" 0.64424 null_eight/null_paperclip
 
-car0_name = scene.add_car(pos="31.57 -31.3018 0",
-                          quat=carHeading2quaternion(2.4525),
+car0_name = scene.add_car(pos="0.1 0 0",
+                          quat=carHeading2quaternion(0.64424+np.pi*0),
                           color=RED_COLOR,
                           is_virtual=True,
                           has_rod=False,)
@@ -66,7 +66,7 @@ car0_name = scene.add_car(pos="31.57 -31.3018 0",
 
 
 
-x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
+x0 = np.array([0.1, 0,0.64424+np.pi*0 ,0,0,0])
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -103,7 +103,7 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 car0_trajectory=CarTrajectory()
 
 
-path, v = hungaroring()
+path, v = null_paperclip()
 car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 # the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
 #car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
@@ -131,7 +131,7 @@ args["crazy_observer"] = params["parameter_server"]["ros__parameters"]["crazy_ob
 MOTOR_LIMIT = args["drive_bridge"]["MOTOR_LIMIT"]
 
 
-car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = False, MPCC_params= args["MPCC_params"])
+car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = True, MPCC_params= args["MPCC_params"])
 
 # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
 car0_controllers = [car0_controller]
@@ -215,6 +215,7 @@ din_sim_data["omega"] = [x0[5]]
 #din_sim_data["v_eta"] = []
 #din_sim_data["omega"] = []
 
+input("Press enter to continue")
 
 while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
@@ -273,6 +274,7 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         x_temp = np.reshape(x_temp, (-1,1))
         horizon = np.append(horizon, x_temp, axis = 1)
     plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
+    print(car0_controller.input)
     #input("Press enter to continue")
 
 

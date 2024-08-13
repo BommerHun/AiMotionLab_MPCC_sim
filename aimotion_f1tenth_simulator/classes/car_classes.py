@@ -771,8 +771,8 @@ class Casadi_MPCC:
 
         (F_front, F_rear) = self.get_tireforce(states=self.X[:,:-1], inputs = self.v_U)
 
-        self.opti.subject_to((F_front < 1, F_front > -1))
-        self.opti.subject_to((F_rear < 1, F_rear > -1))
+        self.opti.subject_to((F_front <= 1, F_front >= -1))
+        self.opti.subject_to((F_rear <= 1, F_rear >= -1))
 
         
         # Dynamic constraint #
@@ -807,8 +807,11 @@ class Casadi_MPCC:
 
         # Virtual Input constraints: d and delta
         #self.opti.subject_to((0.0 < cs.vec(self.v_U[0, 1:]), cs.vec(self.v_U[0, 1:]) <= 1))  # motor reference constraints
-        self.opti.subject_to((self.model.parameters["d_min"] <= cs.vec(self.v_U[0, 1:]), cs.vec(self.v_U[0, 1:]) <= self.model.parameters["d_max"]))  # motor reference constraints
+        
 
+        #self.opti.subject_to((-0.3 <= cs.vec(self.v_U[0, 1:]), cs.vec(self.v_U[0, 1:]) <= 0.5))  # motor reference constraints
+
+        self.opti.subject_to((self.model.parameters["d_min"] <= cs.vec(self.v_U[0, 1:]), cs.vec(self.v_U[0, 1:]) <= self.model.parameters["d_max"]))  # motor reference constraints
         self.opti.subject_to((-self.model.parameters["delta_max"] <= cs.vec(self.v_U[1, 1:]), cs.vec(self.v_U[1, 1:]) <= self.model.parameters["delta_max"] ))  # steering angle constraints
 
          
@@ -816,8 +819,6 @@ class Casadi_MPCC:
         self.opti.subject_to((-self.model.parameters["ddot_max"] <= cs.vec(self.U[0, :]), cs.vec(self.U[0, :]) <= self.model.parameters["ddot_max"]))  # motor reference constraints
         self.opti.subject_to((-self.model.parameters["deltadot_max"] <= cs.vec(self.U[1, :]), cs.vec(self.U[1, :]) <= self.model.parameters["deltadot_max"]))  # steering angle constraints
         
-
-        self.opti.subject_to((self.model.parameters["d_min"] < cs.vec(self.v_U[0, 1:]), cs.vec(self.v_U[0, 1:]) <= self.model.parameters["d_max"]))  # motor reference constraints
         self.opti.subject_to((-self.model.parameters["delta_max"]<= cs.vec(self.v_U[1, 1:]), cs.vec(self.v_U[1, 1:]) <= self.model.parameters["delta_max"] ))  # steering angle constraints
 
          
@@ -834,7 +835,7 @@ class Casadi_MPCC:
 
         # Solver setup
         p_opt = {'expand': False}
-        s_opts = {'max_iter': 2000, 'print_level': 0}
+        s_opts = {'max_iter': 20000, 'print_level': 0}
         self.opti.solver('ipopt', p_opt, s_opts)
    
     def get_tireforce(self, states, inputs):
@@ -858,9 +859,8 @@ class Casadi_MPCC:
             delta = inputs[1]
 
         # slip angles
-        alpha_r = cs.arctan((-v_eta + self.model.l_r*omega)/(v_xi+0.001))
-        alpha_f = delta - cs.arctan((v_eta + self.model.l_f * omega)/(v_xi+0.001))
-
+        alpha_r = cs.arctan((-v_eta + self.model.l_r*omega)/(v_xi+0.001*self.MPCC_params["forward"]))
+        alpha_f = delta - cs.arctan((v_eta + self.model.l_f * omega)/(v_xi+0.001*self.MPCC_params["forward"]))
         # tire forces
         F_xi = self.model.C_m1*d - self.model.C_m2*v_xi - self.model.C_m3*cs.sign(v_xi)
         F_reta = self.model.C_r*alpha_r
@@ -875,8 +875,12 @@ class Casadi_MPCC:
         Method which returns the cost
         :return: cost
         """
-        e_l = self.e_l(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
-        e_c = self.e_c(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
+        if self.MPCC_params["forward"] == -1:
+            e_l = self.e_l(cs.vcat((self.X[0, :]-cs.cos(self.X[2,:])*self.model.l_r, self.X[1, :]-cs.sin(self.X[2,:])*self.model.l_r)), self.theta)
+            e_c = self.e_c(cs.vcat((self.X[0, :]-cs.cos(self.X[2,:])*self.model.l_r, self.X[1, :]-cs.sin(self.X[2,:])*self.model.l_r)), self.theta)
+        else:
+            e_l = self.e_l(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
+            e_c = self.e_c(cs.vcat((self.X[0, :], self.X[1, :])), self.theta)
         
         e_smooth = self.e_smooth()
         e_smooth = e_smooth[0]*self.q_d + e_smooth[1]*self.q_delta
@@ -884,7 +888,7 @@ class Casadi_MPCC:
         #        cost = e_c**2*self.parameters.q_con+e_l**2*self.parameters.q_lat-thetahatdot*self.parameters.q_theta+self.parameters.q_d*ddot**2+self.parameters.q_delta*deltadot**2
 
         e_progress = cs.sum1(cs.fabs(self.v_t))
-
+        e_progress = self.theta[-1]-self.theta[0]
         cost = self.q_l * e_l**2 + self.q_c* e_c**2- self.q_t * e_progress + e_smooth 
         #cost = self.q_l * e_l + self.q_c * e_c- self.q_t * (self.trajectory.L-self.theta[-1]) + self.q_smooth  * e_smooth
 
@@ -900,14 +904,6 @@ class Casadi_MPCC:
 
         ddelta = cs.vec(cs.fabs(self.U[1,:]))
 
-        #d = cs.fabs(d)
-
-        #d = cs.sum1(d)
-
-
-        #delta = cs.fabs(delta)
-
-        #delta = cs.sum1(delta)
 
 
         e_smooth = (cs.dot(dd,dd), cs.dot(ddelta,ddelta))
@@ -929,8 +925,8 @@ class Casadi_MPCC:
         e_c = (point_r-point)*n.T
 
 
-        #e_c = cs.vec(e_c[0, :] + e_c[1, :])
 
+        #e_c = cs.vec(e_c[0, :] + e_c[1, :])
         e_c = cs.dot(n.T,(point_r-point))
 
         return e_c
@@ -1021,8 +1017,8 @@ class Model:
             delta = inputs[1]
 
         # slip angles
-        alpha_r = cs.arctan((-v_eta + self.l_r*omega)/(v_xi+0.001))
-        alpha_f = delta - cs.arctan((v_eta + self.l_f * omega)/(v_xi+0.001))
+        alpha_r = cs.arctan((-v_eta + self.l_r*omega)/(v_xi+0.001*float(self.parameters["forward"])))
+        alpha_f = delta - cs.arctan((v_eta + self.l_f * omega)/(v_xi+0.001*float(self.parameters["forward"])))
 
         # tire forces
         F_xi = self.C_m1*d - self.C_m2*v_xi - self.C_m3*cs.sign(v_xi)
@@ -1090,7 +1086,10 @@ class CarMPCCController(ControllerBase):
         self.errors = {"lateral" : 0, "heading" : 0, "velocity" : 0, "longitudinal": float(0)}
         self.finished = False
         self.prev_phi = 0
-        self.load_parameters()
+
+        self.forward = 1
+        self.parameters = cs.types.SimpleNamespace()
+        #self.load_parameters()
 
 
         self.alpha = 1
@@ -1101,11 +1100,17 @@ class CarMPCCController(ControllerBase):
         """
         Load self parameters from the dict-s
         """
-        self.parameters = cs.types.SimpleNamespace()
 
         m = float(self.vehicle_params["m"])
+
         l_f = float(self.vehicle_params["l_f"])
         l_r = float(self.vehicle_params["l_r"])
+
+
+        if self.forward == -1: #Is this correct???? #TODO
+            l_f = l_f+l_r
+            l_r = 0
+
         I_z = float(self.vehicle_params["I_z"])
 
         C_m1 = float(self.vehicle_params["C_m1"])
@@ -1131,11 +1136,22 @@ class CarMPCCController(ControllerBase):
         self.parameters.deltadot_max = float(self.MPCC_params["deltadot_max"])
         self.parameters.thetahatdot_min = float(self.MPCC_params["thetahatdot_min"])
         self.parameters.thetahatdot_max = float(self.MPCC_params["thetahatdot_max"])
-
+    
+        self.MPCC_params["forward"] = self.forward
         #input constraints:
         delta_max = float(self.MPCC_params["delta_max"])
+        self.MPCC_params["d_max"] = float(self.MPCC_params["d_max"])*self.forward
+        self.MPCC_params["d_min"] = float(self.MPCC_params["d_min"])*self.forward
+
+        if self.MPCC_params["d_max"] < self.MPCC_params["d_min"]:
+            temp = self.MPCC_params["d_max"]
+            self.MPCC_params["d_max"] = self.MPCC_params["d_min"]
+            self.MPCC_params["d_min"] = temp
+
         d_max = float(self.MPCC_params["d_max"])
         d_min = float(self.MPCC_params["d_min"])
+
+        
         #ocp parameters:
         self.parameters.N = int(self.MPCC_params["N"])
         self.parameters.Tf = float(self.MPCC_params["Tf"])
@@ -1191,19 +1207,23 @@ class CarMPCCController(ControllerBase):
             return u_opt
         
 
-        if x0[4] < 0.01:
-            x0[4] = 0.01
+        if x0[4] < abs(0.01*self.forward):
+            x0[4] = 0.01*self.forward
 
         x0 = np.concatenate((x0, np.array([self.theta]), self.input))
 
         self.state_vector = np.reshape(x0, (-1,1))
+        lbx = x0
+        lbx[6] = self.theta-0.01
+        ubx = x0
+        ubx[6] = self.theta+0.01
 
-        x0[6] = self.theta-0.1
-        self.ocp_solver.set(0, 'lbx', x0)
-        x0[6] = self.theta+0.1
-        self.ocp_solver.set(0, 'ubx', x0)
-        x0[6] = self.theta
+
+        self.ocp_solver.set(0, 'lbx', lbx)
+        self.ocp_solver.set(0, 'ubx', ubx)
         self.ocp_solver.set(0, 'x', x0)
+
+        #print(f"lbx: {x0} ubx: {x0}")
         tol = self.parameters.opt_tol
         t = 0
         for i in range(self.parameters.max_QP_iter):
@@ -1309,6 +1329,8 @@ class CarMPCCController(ControllerBase):
                 print(f"___________{i+1}._________")
                 print(u)
                 print(x)
+
+        
         #Acados controller init: 
         if self.muted == False:
             print("Acados init started...")
@@ -1323,7 +1345,7 @@ class CarMPCCController(ControllerBase):
         x_0[6] = self.theta
         self.ocp_solver.set(0, 'x', x_0)
 
-
+        
         for i in range(100):
            
             self.ocp_solver.solve()
@@ -1339,14 +1361,14 @@ class CarMPCCController(ControllerBase):
             print(f"Number of init iterations: {num_iter}")
             print("")
         self.theta = self.ocp_solver.get(0,'x')[6]
-
+        
 
     def _generate_model(self):
         """
         Class method for creating the AcadosModel. 
         Sets self.parameters used by the casadi solver.
         """
-        self.load_parameters() #Make sure that the SimpleNameSpace variables are updated to the current MPCC parameters
+        #self.load_parameters() #Make sure that the SimpleNameSpace variables are updated to the current MPCC parameters
 
         m= self.parameters.m
         l_f=self.parameters.l_f 
@@ -1377,8 +1399,8 @@ class CarMPCCController(ControllerBase):
         model.x = cs.vertcat(x,y,phi,vxi, veta, omega,thetahat, d, delta)
 
         #Defining the slip angles
-        alpha_r = cs.arctan2((-veta+l_r*omega),(vxi+0.0001)) #In the documentation arctan2 is used but vxi can't be < 0
-        alpha_f = delta- cs.arctan2((veta+l_f*omega),(vxi+0.0001))
+        alpha_r = cs.arctan2((-veta+l_r*omega),(vxi+0.0001*self.forward)) #In the documentation arctan2 is used but vxi can't be < 0
+        alpha_f = delta- cs.arctan2((veta+l_f*omega),(vxi+0.0001*self.forward))
 
         #Wheel forces
 
@@ -1424,7 +1446,10 @@ class CarMPCCController(ControllerBase):
         )
 
         #Current position
-        point = cs.vertcat(x,y) 
+        if self.MPCC_params["forward"] == -1:
+            point = cs.vertcat(x+cs.cos(phi)*l_r,y+cs.sin(phi)*l_r) 
+        else:
+            point = cs.vertcat(x,y) 
 
         model.cost_expr_ext_cost = self._cost_expr(point, theta=thetahat,thetahatdot=thetahatdot, ddot = ddot, deltadot = deltadot)
 
@@ -1502,9 +1527,10 @@ class CarMPCCController(ControllerBase):
         ocp.code_export_directory = 'c_generated_code'
         ocp.solver_options.hessian_approx = 'EXACT'
 
-        lbx = np.array((0,self.parameters.d_min, -self.parameters.delta_max))
-        ubx = np.array((self.trajectory.L*1.05,self.parameters.d_max, self.parameters.delta_max)) #TODO: max value of theta 
-
+        lbx = np.array((0,self.MPCC_params["d_min"], -self.parameters.delta_max))
+        ubx = np.array((self.trajectory.L*1.05,self.MPCC_params["d_max"], self.parameters.delta_max)) #TODO: max value of theta 
+        print(f"lbx: {lbx}")
+        print(f"ubx: {ubx}")
         ocp.constraints.lbx = lbx
         ocp.constraints.ubx = ubx
         ocp.constraints.idxbx = np.array((6,7,8)) #d and delta
@@ -1533,7 +1559,7 @@ class CarMPCCController(ControllerBase):
         ocp.cost.Zl = np.array([100000,100000])  # lower slack weight
         ocp.cost.Zu = np.array([100000,100000])  # upper slack weight
 
-        ## Initialize slack variables for lower and upper bounds
+        # Initialize slack variables for lower and upper bounds
         ocp.constraints.lsh = np.zeros(2)
         ocp.constraints.ush = np.zeros(2)
         ocp.constraints.idxsh = np.arange(2)
@@ -1564,21 +1590,13 @@ class CarMPCCController(ControllerBase):
         :param thetastart: float, starting arc lenght of the trajectory
         """
 
-        self.load_parameters()
 
         self.theta = theta_start
         self.s_start = theta_start
         self.theta_dot = 0.0
 
-        self.x0 = x0 #The current position must be the initial condition
-        self.prev_phi = x0[2]
-        self.x0[3] = 0.001 #Give a small forward speed to make the problem feasable
-        self.x0[5] = 0
-        self.x0[4] = 0
+        
 
-        self.prev_state = x0
-
-        self.input = np.array([self.MPCC_params["d_max"],0])
 
 
         t_end = evol_tck[0][-1]
@@ -1602,11 +1620,58 @@ class CarMPCCController(ControllerBase):
         self.trajectory.spl_sx = cs.interpolant("traj", "bspline", [s], x)
         self.trajectory.spl_sy = cs.interpolant("traj", "bspline", [s], y)
         self.trajectory.L = s[-1]
+
+        
+        self.x0 = x0 #The current position must be the initial condition
+        self.prev_phi = x0[2]
+
+
+        x,y,phi = self.trajectory.get_path_parameters_ang(self.theta)
+
+        heading_error = np.abs(self.x0[2]-phi)
+
+        if heading_error >= np.pi/2:
+            print("Reverse mode activated")
+            self.forward = -1
+        else:
+            print("Forward mode activated")
+            self.forward = 1
+
+        
+
+        self.x0[3] = 0.001*self.forward #Give a small forward speed to make the problem feasable
+        self.x0[5] = 0
+        self.x0[4] = 0
+
+        self.prev_state = x0
+        print(f"starting theta: {self.theta}")
         print(f"initial state: {self.x0}")
 
         print(f"starting point: {self.trajectory.get_path_parameters_ang(self.theta)}")
 
+
+        print(f"heading error: {heading_error}")
+
+        
+
+
+
+        self.load_parameters()
+
+        if self.forward:
+            self.input = np.array([self.MPCC_params["d_max"],0])
+        else:
+            self.input = np.array([self.MPCC_params["d_min"],0])
+
+
+
         self.ocp_solver = self._generate_ocp_solver(self._generate_model())
+
+        casadi_vehicle_params = self.vehicle_params
+        if self.forward == -1:
+            casadi_vehicle_params["l_f"] = casadi_vehicle_params["l_f"]+casadi_vehicle_params["l_r"]
+            casadi_vehicle_params["l_r"] = 0
+
         self.casadi_solver = Casadi_MPCC(MPCC_params=self.MPCC_params,
                                          vehicle_param=self.vehicle_params,
                                          dt = self.parameters.Tf/self.parameters.N,
@@ -1620,6 +1685,8 @@ class CarMPCCController(ControllerBase):
                                          trajectory=self.trajectory,
                                          N = self.parameters.N,
                                          x_0 = self.x0)
+        print(f"MPCC params: {self.MPCC_params}")
+        print(f"vehicle params {self.vehicle_params}")
         self.controller_init()
 
 
