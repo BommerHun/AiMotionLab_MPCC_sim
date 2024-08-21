@@ -80,6 +80,7 @@ typedef struct f1tenth_bicycle_model_sim_solver_capsule
 
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_sim_create(f1tenth_bicycle_model_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_sim_solve(f1tenth_bicycle_model_sim_solver_capsule *capsule);
+ACADOS_SYMBOL_EXPORT void f1tenth_bicycle_model_acados_sim_batch_solve(f1tenth_bicycle_model_sim_solver_capsule **capsules, int N_batch);
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_sim_free(f1tenth_bicycle_model_sim_solver_capsule *capsule);
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_sim_update_params(f1tenth_bicycle_model_sim_solver_capsule *capsule, double *value, int np);
 

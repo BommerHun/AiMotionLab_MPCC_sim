@@ -63,7 +63,7 @@
 #define F1TENTH_BICYCLE_MODEL_NY0    0
 #define F1TENTH_BICYCLE_MODEL_NY     0
 #define F1TENTH_BICYCLE_MODEL_NYN    0
-#define F1TENTH_BICYCLE_MODEL_N      14
+#define F1TENTH_BICYCLE_MODEL_N      16
 #define F1TENTH_BICYCLE_MODEL_NH     2
 #define F1TENTH_BICYCLE_MODEL_NHN    0
 #define F1TENTH_BICYCLE_MODEL_NH0    0
@@ -96,35 +96,35 @@ typedef struct f1tenth_bicycle_model_solver_capsule
     /* external functions */
     // dynamics
 
-    external_function_param_casadi *forw_vde_casadi;
-    external_function_param_casadi *expl_ode_fun;
+    external_function_external_param_casadi *forw_vde_casadi;
+    external_function_external_param_casadi *expl_ode_fun;
 
-    external_function_param_casadi *hess_vde_casadi;
+    external_function_external_param_casadi *hess_vde_casadi;
 
 
 
     // cost
 
-    external_function_param_casadi *ext_cost_fun;
-    external_function_param_casadi *ext_cost_fun_jac;
-    external_function_param_casadi *ext_cost_fun_jac_hess;
+    external_function_external_param_casadi *ext_cost_fun;
+    external_function_external_param_casadi *ext_cost_fun_jac;
+    external_function_external_param_casadi *ext_cost_fun_jac_hess;
 
 
 
 
 
-    external_function_param_casadi ext_cost_0_fun;
-    external_function_param_casadi ext_cost_0_fun_jac;
-    external_function_param_casadi ext_cost_0_fun_jac_hess;
+    external_function_external_param_casadi ext_cost_0_fun;
+    external_function_external_param_casadi ext_cost_0_fun_jac;
+    external_function_external_param_casadi ext_cost_0_fun_jac_hess;
 
 
 
 
 
     // constraints
-    external_function_param_casadi *nl_constr_h_fun_jac;
-    external_function_param_casadi *nl_constr_h_fun;
-    external_function_param_casadi *nl_constr_h_fun_jac_hess;
+    external_function_external_param_casadi *nl_constr_h_fun_jac;
+    external_function_external_param_casadi *nl_constr_h_fun;
+    external_function_external_param_casadi *nl_constr_h_fun_jac_hess;
 
 
 
@@ -160,6 +160,7 @@ ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_update_params(f1tenth_bicy
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_update_params_sparse(f1tenth_bicycle_model_solver_capsule * capsule, int stage, int *idx, double *p, int n_update);
 
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_solve(f1tenth_bicycle_model_solver_capsule * capsule);
+ACADOS_SYMBOL_EXPORT void f1tenth_bicycle_model_acados_batch_solve(f1tenth_bicycle_model_solver_capsule ** capsules, int N_batch);
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_free(f1tenth_bicycle_model_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT void f1tenth_bicycle_model_acados_print_stats(f1tenth_bicycle_model_solver_capsule * capsule);
 ACADOS_SYMBOL_EXPORT int f1tenth_bicycle_model_acados_custom_update(f1tenth_bicycle_model_solver_capsule* capsule, double* data, int data_len);

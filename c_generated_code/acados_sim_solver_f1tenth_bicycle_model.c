@@ -74,7 +74,7 @@ int f1tenth_bicycle_model_acados_sim_create(f1tenth_bicycle_model_sim_solver_cap
     bool tmp_bool;
 
     
-    double Tsim = 0.05714285714285715;
+    double Tsim = 0.05;
 
     
     // explicit ode
@@ -222,6 +222,19 @@ int f1tenth_bicycle_model_acados_sim_solve(f1tenth_bicycle_model_sim_solver_caps
         printf("error in f1tenth_bicycle_model_acados_sim_solve()! Exiting.\n");
 
     return status;
+}
+
+
+void f1tenth_bicycle_model_acados_sim_batch_solve(f1tenth_bicycle_model_sim_solver_capsule ** capsules, int N_batch)
+{
+
+    for (int i = 0; i < N_batch; i++)
+    {
+        sim_solve(capsules[i]->acados_sim_solver, capsules[i]->acados_sim_in, capsules[i]->acados_sim_out);
+    }
+
+
+    return;
 }
 
 

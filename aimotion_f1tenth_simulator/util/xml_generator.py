@@ -208,10 +208,6 @@ class SceneXmlGenerator:
         else:
             print("[SceneXmlGenerator] Sztaki already added")
     
-    def add_zandvoort_track(self,pos,quat):
-        name = "zandwoort"
-        #zandvoort = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat)
-        ET.SubElement(self.worldbody, "geom", name = "zandvoort", pos="0 0 1.5", size="0.105 0.105 0.0925", rgba="0.8 0.8 0.8 1.0", material="mat-zandvoort")
 
     
     def add_car(self, pos, quat, color, is_virtual, has_rod=False, type="fleet1tenth", **kwargs):
@@ -234,6 +230,25 @@ class SceneXmlGenerator:
         
         return name
     
+    def add_MPCC_markers(self, n, color = "256 0 0", pos = "0 0 0", quat= "1 0 1"):
+        markers = []
+        
+        for i in range(n):
+            name = f"mpcc_{i}"
+            x,y,z = 0+i*1, 0, 1
+
+            markers.append(ET.SubElement(self.worldbody, "body", name = name, pos = f"{x} {y} {z}", quat = quat))
+
+            m = ET.SubElement(markers[i], "geom", name = f"mpcc_marker{i}", type = "sphere", size = ".05", pos = "0 0 0", rgba = color)
+            #joint = ET.SubElement(markers[i], "joint", type = "free", name = f"marker_{i}_free_joint")
+            #markers.append(ET.SubElement(marker_root, "geom", type = "sphere", size = ".05", pos = f"{x} {y} {z}", rgba = color))
+        for i in range(n):
+            ET.SubElement(self.contact, "exclude",body1= "Fleet1Tenth_0",body2=  f"mpcc_{i}")
+
+        return markers
+        
+    
+
     def _add_fleet1tenth(self, pos, quat, name, color, has_rod, **kwargs):
         
         wheel_width = kwargs["wheel_width"] if "wheel_width" in kwargs else F1T_PROP.WHEEL_WIDTH.value

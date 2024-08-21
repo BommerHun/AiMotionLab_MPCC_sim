@@ -84,8 +84,8 @@ OBJ+= $(OCP_OBJ)
 EXTERNAL_DIR=
 EXTERNAL_LIB=
 
-INCLUDE_PATH = /home/bodlaire/acados/include
-LIB_PATH = /home/bodlaire/acados/lib
+INCLUDE_PATH = /home/aimotion-laptop-i9/acados/include
+LIB_PATH = /home/aimotion-laptop-i9/acados/lib
 
 # preprocessor flags for make's implicit rules
 CPPFLAGS+= -I$(INCLUDE_PATH)
@@ -96,11 +96,13 @@ CPPFLAGS+= -I$(INCLUDE_PATH)/hpipm/include
 
 # define the c-compiler flags for make's implicit rules
 CFLAGS = -fPIC -std=c99   -O2#-fno-diagnostics-show-line-numbers -g
+
 # # Debugging
 # CFLAGS += -g3
 
 # linker flags
 LDFLAGS+= -L$(LIB_PATH)
+
 
 # link to libraries
 LDLIBS+= -lacados
@@ -146,7 +148,7 @@ ocp_cython_c: ocp_shared_lib
 	-o acados_ocp_solver_pyx.c \
 	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
 	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_ocp_solver_pyx.pyx \
-	-I /home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/c_generated_code \
+	-I /home/aimotion-laptop-i9/Desktop/MuJoCoMPC/AiMotionLab_MPCC_sim/c_generated_code \
 
 ocp_cython_o: ocp_cython_c
 	$(CC) $(ACADOS_FLAGS) -c -O2 \
@@ -155,7 +157,7 @@ ocp_cython_o: ocp_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/venv/lib/python3.10/site-packages/numpy/_core/include \
+	-I /home/aimotion-laptop-i9/Desktop/MuJoCoMPC/AiMotionLab_MPCC_sim/venv/lib/python3.10/site-packages/numpy/_core/include \
 	-I /usr/include/python3.10 \
 	acados_ocp_solver_pyx.c \
 
@@ -173,7 +175,7 @@ sim_cython_c: sim_shared_lib
 	-o acados_sim_solver_pyx.c \
 	-I $(INCLUDE_PATH)/../interfaces/acados_template/acados_template \
 	$(INCLUDE_PATH)/../interfaces/acados_template/acados_template/acados_sim_solver_pyx.pyx \
-	-I /home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/c_generated_code \
+	-I /home/aimotion-laptop-i9/Desktop/MuJoCoMPC/AiMotionLab_MPCC_sim/c_generated_code \
 
 sim_cython_o: sim_cython_c
 	$(CC) $(ACADOS_FLAGS) -c -O2 \
@@ -182,7 +184,7 @@ sim_cython_o: sim_cython_c
 	-I $(INCLUDE_PATH)/blasfeo/include/ \
 	-I $(INCLUDE_PATH)/hpipm/include/ \
 	-I $(INCLUDE_PATH) \
-	-I /home/bodlaire/stock_repo/AiMotionLab_MPCC_sim/venv/lib/python3.10/site-packages/numpy/_core/include \
+	-I /home/aimotion-laptop-i9/Desktop/MuJoCoMPC/AiMotionLab_MPCC_sim/venv/lib/python3.10/site-packages/numpy/_core/include \
 	-I /usr/include/python3.10 \
 	acados_sim_solver_pyx.c \
 
