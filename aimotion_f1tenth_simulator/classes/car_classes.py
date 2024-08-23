@@ -1065,7 +1065,7 @@ class Model:
 
 
 class CarMPCCController(ControllerBase):
-    def __init__(self, vehicle_params: dict, MPCC_params: dict, mute = False):
+    def __init__(self, vehicle_params: dict, MPCC_params: dict, mute = False, index = 0):
         """
         Init controller parameters
         :param vehicle_params: dict
@@ -1075,12 +1075,12 @@ class CarMPCCController(ControllerBase):
         self.vehicle_params = vehicle_params
         self.MPCC_params = MPCC_params
         self.trajectory = None
-
+        self.index = index
         self.theta = 0.0
         self.theta_dot = 0.0
         self.s_start = 0.0
         self.x0 = np.zeros((1,6))
-
+        self.freq = 0
         self.input = np.array([self.MPCC_params["d_max"],0])
        
         self.ocp_solver = None #acados solver to compute control
@@ -1198,9 +1198,9 @@ class CarMPCCController(ControllerBase):
 
         self.state_vector = np.reshape(x0, (-1,1))
 
-        x0[6] = self.theta-0.1
+        x0[6] = self.theta
         self.ocp_solver.set(0, 'lbx', x0)
-        x0[6] = self.theta+0.1
+        x0[6] = self.theta
         self.ocp_solver.set(0, 'ubx', x0)
         x0[6] = self.theta
         self.ocp_solver.set(0, 'x', x0)
@@ -1250,6 +1250,7 @@ class CarMPCCController(ControllerBase):
         self.errors = {"contouring" : float(e_con), "heading" : float(self.theta), "velocity" : float(x_opt[3,0]), "longitudinal": float(e_long)}
         self.freq = 1/t
         self.theta_dot = self.ocp_solver.get(0, "u")[0]
+        
         return u_opt
 
         
@@ -1375,7 +1376,6 @@ class CarMPCCController(ControllerBase):
 
 
         model.x = cs.vertcat(x,y,phi,vxi, veta, omega,thetahat, d, delta)
-
         #Defining the slip angles
         alpha_r = cs.arctan2((-veta+l_r*omega),(vxi+0.0001)) #In the documentation arctan2 is used but vxi can't be < 0
         alpha_f = delta- cs.arctan2((veta+l_f*omega),(vxi+0.0001))
@@ -1499,7 +1499,7 @@ class CarMPCCController(ControllerBase):
         ocp.solver_options.levenberg_marquardt = 10.0
         ocp.solver_options.print_level = 0
         ocp.solver_options.qp_solver_iter_max = 1000
-        ocp.code_export_directory = 'c_generated_code'
+        ocp.code_export_directory = f"acados_c_generated/c_generated_code_{self.index}"
         ocp.solver_options.hessian_approx = 'EXACT'
 
         lbx = np.array((0,self.parameters.d_min, -self.parameters.delta_max))
@@ -1551,7 +1551,8 @@ class CarMPCCController(ControllerBase):
 
         ocp.constraints.x0 = x0 #Set in the set_trajectory function
 
-        ocp_solver = AcadosOcpSolver(ocp, json_file = 'acados_ocp.json')
+
+        ocp_solver = AcadosOcpSolver(ocp, json_file = f"acados_c_generated/acados_ocp_{self.index}.json")
         return ocp_solver
     
 

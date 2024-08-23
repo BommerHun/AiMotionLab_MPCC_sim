@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-
+import numpy as np
 import aimotion_f1tenth_simulator.util.mujoco_helper as mh
 import math
 
@@ -52,6 +52,13 @@ class SceneXmlGenerator:
         self._mocap_drone_names = []
         self._mocap_payload_names = []
 
+        self.option = ET.SubElement(self.root, "option")
+
+
+
+        ET.SubElement(self.option, "flag", contact = "enable")
+
+#        ET.SubElement(self.root, "option", contact = "false")
     def add_bicycle(self, pos, quat, color):
 
         name = "Bicycle_" + str(self._bicycle_counter)
@@ -218,6 +225,9 @@ class SceneXmlGenerator:
             name = "Fleet1Tenth_" + str(self._virtfleet1tenth_cntr)
             self._add_fleet1tenth(pos, quat, name, color, has_rod, **kwargs)
             self._virtfleet1tenth_cntr += 1
+            if self._virtfleet1tenth_cntr >=2:
+                for i in range(self._virtfleet1tenth_cntr-1):
+                    ET.SubElement(self.contact, "exclude", body1 = name, body2 = f"Fleet1Tenth_{i}")
         
         elif not is_virtual and type == "fleet1tenth":
             name = "CarMocap_fleet1tenth_" + str(self._realfleet1tenth_cntr)
@@ -230,20 +240,29 @@ class SceneXmlGenerator:
         
         return name
     
-    def add_MPCC_markers(self, n, color = "256 0 0", pos = "0 0 0", quat= "1 0 1"):
+    def add_trajectory_markers(self, x,y, color, size = 0.01):
+        name = "ref_trajectory_body"
+        trajectory_ref = ET.SubElement(self.worldbody, "body", name = name, mocap = "true", pos = "0 0 0")
+
+        for i in range(np.shape(x)[0]):
+            marker = ET.SubElement(trajectory_ref, "geom", type = "sphere",size = f"{size}",contype="0", conaffinity="0", rgba = color, pos = f"{x[i]} {y[i]} 0")
+
+        ET.SubElement(self.contact, "exclude",name = "marker_exclude", body1= "Fleet1Tenth_0",body2=  name)
+
+    def add_MPCC_markers(self, n, color = "256 0 0", pos = "0 0 0", quat= "1 0 1", size = 0.1):
         markers = []
         
         for i in range(n):
             name = f"mpcc_{i}"
             x,y,z = 0+i*1, 0, 1
 
-            markers.append(ET.SubElement(self.worldbody, "body", name = name, pos = f"{x} {y} {z}", quat = quat))
+            markers.append(ET.SubElement(self.worldbody, "body", name = name,mocap = "true", pos = f"{x} {y} {z}", quat = quat))
 
-            m = ET.SubElement(markers[i], "geom", name = f"mpcc_marker{i}", type = "sphere", size = ".05", pos = "0 0 0", rgba = color)
+            m = ET.SubElement(markers[i], "geom", name = f"mpcc_marker{i}", type = "sphere",contype="0" ,conaffinity="0", size = f"{size}", pos = "0 0 0", rgba = color)
             #joint = ET.SubElement(markers[i], "joint", type = "free", name = f"marker_{i}_free_joint")
             #markers.append(ET.SubElement(marker_root, "geom", type = "sphere", size = ".05", pos = f"{x} {y} {z}", rgba = color))
         for i in range(n):
-            ET.SubElement(self.contact, "exclude",body1= "Fleet1Tenth_0",body2=  f"mpcc_{i}")
+            ET.SubElement(self.contact, "exclude", name = f"car_marker_exc{i}", body1= "Fleet1Tenth_0",body2=  f"mpcc_{i}")
 
         return markers
         
@@ -262,7 +281,7 @@ class SceneXmlGenerator:
         posxyz = str.split(pos)
         pos = posxyz[0] + " " + posxyz[1] + " " + wheel_radius
         
-        car = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat)
+        car = ET.SubElement(self.worldbody, "body", name=name, pos=pos, quat=quat, )
 
         mass = kwargs["mass"] if "mass" in kwargs else "3.0"
         inertia = kwargs["inertia"] if "intertia" in kwargs else ".05 .05 .08"
@@ -287,23 +306,23 @@ class SceneXmlGenerator:
         ET.SubElement(wheelfl, "joint", name=name + "_wheelfl_steer", type="hinge", pos="0.16113 .10016 0", limited="true", frictionloss=fric_steer, damping=damp_steer, armature=armature_steer, range=steer_range, axis="0 0 1")
         ET.SubElement(wheelfl, "joint", name=name + "_wheelfl", type="hinge", pos="0.16113 .122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelfl, "geom", name=name + "_wheelfl", type="cylinder", size=wheel_size, pos="0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelfl, "geom", name=name + "_wheelfl", type="cylinder", contype="0", conaffinity="0", size=wheel_size, pos="0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelrl = ET.SubElement(car, "body", name=name + "_wheelrl" )
         ET.SubElement(wheelrl, "joint", name=name + "_wheelrl", type="hinge", pos="-0.16113 .122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelrl, "geom", name=name + "_wheelrl", type="cylinder", size=wheel_size, pos="-0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelrl, "geom", name=name + "_wheelrl", type="cylinder",contype="0", conaffinity="0", size=wheel_size, pos="-0.16113 .122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelfr = ET.SubElement(car, "body", name=name + "_wheelfr" )
         ET.SubElement(wheelfr, "joint", name=name + "_wheelfr_steer", type="hinge", pos="0.16113 -.10016 0", limited="true", frictionloss=fric_steer, damping=damp_steer, armature=armature_steer, range=steer_range, axis="0 0 1")
         ET.SubElement(wheelfr, "joint", name=name + "_wheelfr", type="hinge", pos="0.16113 -.122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelfr, "geom", name=name + "_wheelfr", type="cylinder", size=wheel_size, pos="0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelfr, "geom", name=name + "_wheelfr", type="cylinder", contype="0", conaffinity="0",size=wheel_size, pos="0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         wheelrr = ET.SubElement(car, "body", name=name + "_wheelrr" )
         ET.SubElement(wheelrr, "joint", name=name + "_wheelrr", type="hinge", pos="-0.16113 -.122385 0", axis="0 1 0", frictionloss=frictionloss, damping=damping, armature=armature, limited="false")
 
-        ET.SubElement(wheelrr, "geom", name=name + "_wheelrr", type="cylinder", size=wheel_size, pos="-0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
+        ET.SubElement(wheelrr, "geom", name=name + "_wheelrr", type="cylinder", contype="0", conaffinity="0", size=wheel_size, pos="-0.16113 -.122385 0", mass="0.1", material="material_check", euler="1.571 0 0")
 
         friction=kwargs["friction"] if "friction" in kwargs else "2.5 2.5 .009 .0001 .0001"
 
@@ -330,22 +349,22 @@ class SceneXmlGenerator:
 
     
     def _add_fleet1tenth_body(self, car, name, color, has_rod):
-        ET.SubElement(car, "geom", name=name + "_chassis_b", type="box", size=".10113 .1016 .02", pos= "-.06 0 0", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_chassis_f", type="box", size=".06 .07 .02", pos=".10113 0 0", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_front", type="box", size=".052388 .02 .02", pos=".2135 0 0", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_back", type="box", size=".052388 .02 .02", pos="-.2135 0 0", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_front_bumper", type="box", size=".005 .09 .02", pos=".265888 0 0.02", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_back_bumper", type="box", size=".005 .08 .02", pos="-.265888 0 0.02", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_number", type="cylinder", size=".01984 .03", pos=".12 0 .05", rgba="0.1 0.1 0.1 1.0")
-        ET.SubElement(car, "geom", name=name + "_camera", type="box", size=".012 .06 0.02", pos=".18 0 .08")
-        ET.SubElement(car, "geom", name=name + "_camera_holder", type="box", size=".012 .008 .02", pos=".18 0 .04")
-        ET.SubElement(car, "geom", name=name + "_circuits", type="box", size=".08 .06 .03", pos="-.05 0 .05", rgba=color)
-        ET.SubElement(car, "geom", name=name + "_antennal", type="box", size=".007 .004 .06", pos="-.16 -.01 .105", euler="0.2 0 0", rgba=".1 .1 .1 1.0")
-        ET.SubElement(car, "geom", name=name + "_antennar", type="box", size=".007 .004 .06", pos="-.16 .01 .105", euler="-0.2 0 0", rgba=".1 .1 .1 1.0")
-        ET.SubElement(car, "geom", name=name + "_antenna_holder", type="box", size=".008 .008 .02", pos="-.16 0 .04", rgba=".1 .1 .1 1.0")
+        ET.SubElement(car, "geom", name=name + "_chassis_b", type="box", contype="0", conaffinity="0",size=".10113 .1016 .02", pos= "-.06 0 0", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_chassis_f", type="box", contype="0", conaffinity="0",size=".06 .07 .02", pos=".10113 0 0", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_front", type="box",contype="0", conaffinity="0", size=".052388 .02 .02", pos=".2135 0 0", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_back", type="box",contype="0", conaffinity="0", size=".052388 .02 .02", pos="-.2135 0 0", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_front_bumper", type="box", contype="0", conaffinity="0",size=".005 .09 .02", pos=".265888 0 0.02", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_back_bumper", type="box", contype="0", conaffinity="0",size=".005 .08 .02", pos="-.265888 0 0.02", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_number", type="cylinder",contype="0", conaffinity="0", size=".01984 .03", pos=".12 0 .05", rgba="0.1 0.1 0.1 1.0")
+        ET.SubElement(car, "geom", name=name + "_camera", type="box",contype="0", conaffinity="0", size=".012 .06 0.02", pos=".18 0 .08")
+        ET.SubElement(car, "geom", name=name + "_camera_holder", type="box",contype="0", conaffinity="0", size=".012 .008 .02", pos=".18 0 .04")
+        ET.SubElement(car, "geom", name=name + "_circuits", type="box", contype="0", conaffinity="0",size=".08 .06 .03", pos="-.05 0 .05", rgba=color)
+        ET.SubElement(car, "geom", name=name + "_antennal", type="box", contype="0", conaffinity="0",size=".007 .004 .06", pos="-.16 -.01 .105", euler="0.2 0 0", rgba=".1 .1 .1 1.0")
+        ET.SubElement(car, "geom", name=name + "_antennar", type="box",contype="0", conaffinity="0", size=".007 .004 .06", pos="-.16 .01 .105", euler="-0.2 0 0", rgba=".1 .1 .1 1.0")
+        ET.SubElement(car, "geom", name=name + "_antenna_holder", type="box",contype="0", conaffinity="0", size=".008 .008 .02", pos="-.16 0 .04", rgba=".1 .1 .1 1.0")
 
         if has_rod:
-            ET.SubElement(car, "geom", name=name + "_rod", type="cylinder", size="0.02 0.5225", pos="-.175 0 0.5225", rgba="0.3 0.3 0.3 1.0", euler="0 0.1 0")
+            ET.SubElement(car, "geom", name=name + "_rod", type="cylinder", contype="0", conaffinity="0",size="0.02 0.5225", pos="-.175 0 0.5225", rgba="0.3 0.3 0.3 1.0", euler="0 0.1 0")
 
 
     def save_xml(self, file_name):

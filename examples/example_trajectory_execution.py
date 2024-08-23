@@ -64,8 +64,11 @@ wheel_radius = ".072388"
 # create xml with a car
 scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 
+x0 = np.array([0, 0,0.64424,0,0,0])
 
 
+
+#Adding the f1tenth vehicle
 car0_name = scene.add_car(pos="0 0 0",
                           quat=carHeading2quaternion(0.64424),
                           color=RED_COLOR,
@@ -76,10 +79,34 @@ car0_name = scene.add_car(pos="0 0 0",
                           #inertia=inertia,
                           #wheel_radius=wheel_radius) # add the car to the scene
 
-markers = scene.add_MPCC_markers(args["MPCC_params"]["N"], BLUE_COLOR, "0 0 0", quat = carHeading2quaternion(0.64424))
+#MPCC horizon markers
+horizon_markers = scene.add_MPCC_markers(args["MPCC_params"]["N"], BLUE_COLOR, "0 0 0", quat = carHeading2quaternion(0.64424), size=0.1)
+
+# create a trajectory
+car0_trajectory=CarTrajectory()
 
 
-x0 = np.array([0, 0,0.64424,0,0,0])
+path, v = null_infty(laps=1)
+car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
+
+theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
+
+theta0 = theta_finder.solve()
+
+
+#Reference trajectory points:
+t_end = car0_trajectory.evol_tck[0][-1]
+
+        
+t_eval=np.linspace(0, t_end, 100)
+s=splev(t_eval, car0_trajectory.evol_tck)
+
+(x,y) = splev(s, car0_trajectory.pos_tck)
+
+ref_traj_markers = scene.add_trajectory_markers(x,y,BLACK_COLOR, size = 0.05)
+
+
+
 
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
@@ -99,11 +126,11 @@ rec_interval = None # no video capture
 
 # initializing simulator
 simulator = ActiveSimulator(xml_filename, rec_interval, control_step, graphics_step)
-
 # ONLY for recording: the camera angles can be adjusted by the following commands
 #simulator.activeCam
 #simulator.activeCam.distance=9
 #simulator.activeCam.azimuth=230
+
 
 # grabbing the car
 car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
@@ -113,24 +140,13 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 #car0.set_steering_parameters(offset=0.3, gain=1) # if not specified the default values will be used
 
 
-# create a trajectory
-car0_trajectory=CarTrajectory()
-
-
-path, v = null_infty()
-car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
-
-theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
-
-theta0 = theta_finder.solve()
 
 
 
 
 
 
-
-car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = True, MPCC_params= args["MPCC_params"])
+car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = False, MPCC_params= args["MPCC_params"])
 
 # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
 car0_controllers = [car0_controller]
@@ -150,7 +166,6 @@ car0.set_controllers(car0_controllers)
 
 
 plotter = MPCC_plotter()
-
 s = np.linspace(0, car0_controller.trajectory.L,10000)
 """
 plt.title("1/10 scale Hungaroring race track layout")
@@ -207,15 +222,16 @@ din_sim_data["v_xi"] = [x0[3]]
 din_sim_data["v_eta"] = [x0[4]]
 din_sim_data["omega"] = [x0[5]]
 
-while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
+
+
+while( not (simulator.glfw_window_should_close()) and (car0_controller.finished == False )): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
     if GUI:
         simulator.update()
     else:
         simulator.update_()
   
-
-
+    
     st = car0_controller.prev_state
     (x_ref, y_ref) = splev(car0_controller.state_vector[6,:], car0_trajectory.pos_tck)
     plotter.set_ref_point(x_ref, y_ref)
@@ -255,18 +271,25 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     t.append(simulator.i*simulator.control_step)
 
     if car0_trajectory.is_finished() or car0_controller.finished == True:
+        print("Trajectory completed")
         break
 
     
     #update horizon plotter and mujoco markers
     horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
-    for i in range(car0_controller.parameters.N-1):
-        x_temp   = car0_controller.ocp_solver.get(i+1, 'x')
+    for i in range(car0_controller.parameters.N):
+        x_temp   = car0_controller.ocp_solver.get(i, 'x')
         x_temp = np.reshape(x_temp, (-1,1))
         horizon = np.append(horizon, x_temp, axis = 1)
-    
-        simulator.model.body(f"mpcc_{i}").pos = np.concatenate((x_temp[:2, 0], np.array([0])))
 
+        try:
+            id = simulator.model.body(f"mpcc_{i}").id
+            
+            id = simulator.model.body_mocapid[id]
+            simulator.data.mocap_pos[id] = np.concatenate((x_temp[:2, 0], np.array([0])))
+
+        except Exception as e:
+            print(e)
 
     plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
     #input("Press enter to continue")
@@ -295,7 +318,7 @@ plt.show(block=False)
 
 fix, axs = plt.subplots(2, 1)
 axs[0].plot(t,contouring_errors)
-axs[0].set_ylabel("Lateral error (m)")
+axs[0].set_ylabel("Contouring error (m)")
 axs[0].set_xlabel("Time (s)")
 axs[1].plot(t,longitudinal_errors)
 axs[1].set_ylabel("Longitudinal error (m)")

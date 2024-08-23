@@ -24,9 +24,9 @@ GUI = True # if True the simulator window will be visible, if False the simulato
 
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
+BLUE_COLOR = "0.2 0.2 0.85 1.0"
+BLACK_COLOR = "0.1 0.1 0.1 1.0"
 
-
-#Hungaroring: starting point: (DM(9.64919), DM(-9.28979), DM(2.45226))
 
 
 # the XML generator will create the scene for the simulation. All the XML files and the dependencies are located
@@ -35,6 +35,21 @@ abs_path = os.path.dirname(os.path.abspath(__file__))
 xml_path = os.path.join(abs_path, "..", "assets")
 xml_base_filename = "scene_without_walls.xml" # the base xml file that contains the necessary information for the simulation
 save_filename = "built_scene.xml" # the name of the xml file that will be created by the XML generator
+
+
+#MPCC param file
+parent_dir = os.path.dirname(os.path.dirname(__file__))
+file_name = os.path.join(parent_dir, "examples/Simulator_config.yaml")
+with open(file_name) as file:
+    params = yaml.full_load(file)
+
+
+args = {}
+args["vehicle_params"] = params["parameter_server"]["ros__parameters"]["vehicle_params"]
+args["MPCC_params"] = params["parameter_server"]["ros__parameters"]["controllers"]["MPCC"]
+args["drive_bridge"] = params["parameter_server"]["ros__parameters"]["drive_bridge"]
+args["crazy_observer"] = params["parameter_server"]["ros__parameters"]["crazy_observer"]
+MOTOR_LIMIT = args["drive_bridge"]["MOTOR_LIMIT"]
 
 
 # parameters for the car can be specified by passing keyword arguments to the add_car method -> these will remain constant during the simulation 
@@ -48,10 +63,9 @@ wheel_radius = ".072388"
 
 # create xml with a car
 scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
-#heading: 0.64424
 
-#"31.57 -31.3018 0" 2.4525 HUNGARORING
-# "0 0 0" 0.64424 null_eight/null_paperclip
+
+#Adding the f1tenth vehicle
 
 car0_name = scene.add_car(pos="31.57 -31.3018 0",
                           quat=carHeading2quaternion(2.4525),
@@ -65,6 +79,36 @@ car0_name = scene.add_car(pos="31.57 -31.3018 0",
 
 
 x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
+
+#MPCC horizon markers
+horizon_markers = scene.add_MPCC_markers(args["MPCC_params"]["N"], BLUE_COLOR, "0 0 0", quat = carHeading2quaternion(0.64424), size=0.1)
+
+# create a trajectory
+car0_trajectory=CarTrajectory()
+
+
+path, v = hungaroring()
+car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
+
+theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
+
+theta0 = theta_finder.solve()
+
+
+#Reference trajectory points:
+t_end = car0_trajectory.evol_tck[0][-1]
+
+        
+t_eval=np.linspace(0, t_end, 100)
+s=splev(t_eval, car0_trajectory.evol_tck)
+
+(x,y) = splev(s, car0_trajectory.pos_tck)
+
+ref_traj_markers = scene.add_trajectory_markers(x,y,BLACK_COLOR, size = 0.05)
+
+
+
+
 # saving the scene as xml so that the simulator can load it
 scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -83,7 +127,6 @@ rec_interval = None # no video capture
 
 # initializing simulator
 simulator = ActiveSimulator(xml_filename, rec_interval, control_step, graphics_step)
-
 # ONLY for recording: the camera angles can be adjusted by the following commands
 #simulator.activeCam
 #simulator.activeCam.distance=9
@@ -97,39 +140,13 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 #car0.set_steering_parameters(offset=0.3, gain=1) # if not specified the default values will be used
 
 
-# create a trajectory
-car0_trajectory=CarTrajectory()
 
 
-path, v = hungaroring()
-car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
-# the biult in trajectory generator fits 2D splines onto the given coordinates and generates the trajectory with contstant reference velocity
-#car0_trajectory.build_from_points_const_speed(path_points=path_points, path_smoothing=0.01, path_degree=4, const_speed=1.5)
-#car0_trajectory.plot_trajectory() # this is a blocking method close the plot to proceed
 
 
-theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
-
-theta0 = theta_finder.solve()
 
 
-#car0_controller = CarLPVController() # init controller
-parent_dir = os.path.dirname(os.path.dirname(__file__))
-
-file_name = os.path.join(parent_dir, "examples/Simulator_config.yaml")
-with open(file_name) as file:
-    params = yaml.full_load(file)
-
-args = {}
-
-args["vehicle_params"] = params["parameter_server"]["ros__parameters"]["vehicle_params"]
-args["MPCC_params"] = params["parameter_server"]["ros__parameters"]["controllers"]["MPCC"]
-args["drive_bridge"] = params["parameter_server"]["ros__parameters"]["drive_bridge"]
-args["crazy_observer"] = params["parameter_server"]["ros__parameters"]["crazy_observer"]
-MOTOR_LIMIT = args["drive_bridge"]["MOTOR_LIMIT"]
-
-
-car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = False, MPCC_params= args["MPCC_params"])
+car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = True, MPCC_params= args["MPCC_params"])
 
 # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
 car0_controllers = [car0_controller]
@@ -149,7 +166,6 @@ car0.set_controllers(car0_controllers)
 
 
 plotter = MPCC_plotter()
-
 s = np.linspace(0, car0_controller.trajectory.L,10000)
 """
 plt.title("1/10 scale Hungaroring race track layout")
@@ -169,8 +185,8 @@ x_ref, y_ref = (car0_controller.trajectory.spl_sx(car0_controller.theta),car0_co
 plotter.set_ref_point(np.array(float(x_ref)), np.array(float(y_ref)))
 #update horizon plotter
 horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
-for i in range(car0_controller.parameters.N-1):
-    x_temp   = car0_controller.ocp_solver.get(i+1, 'x')
+for i in range(car0_controller.parameters.N):
+    x_temp   = car0_controller.ocp_solver.get(i, 'x')
     x_temp = np.reshape(x_temp, (-1,1))
     horizon = np.append(horizon, x_temp, axis = 1)
 plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
@@ -206,14 +222,6 @@ din_sim_data["v_xi"] = [x0[3]]
 din_sim_data["v_eta"] = [x0[4]]
 din_sim_data["omega"] = [x0[5]]
 
-#din_sim_data["x"] = []
-#din_sim_data["y"] = []
-#din_sim_data["phi"] = []
-#din_sim_data["v_xi"] = []
-#din_sim_data["v_eta"] = []
-#din_sim_data["omega"] = []
-
-
 while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
     if GUI:
@@ -221,8 +229,9 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     else:
         simulator.update_()
   
-    st = car0_controller.prev_state
     
+
+    st = car0_controller.prev_state
     (x_ref, y_ref) = splev(car0_controller.state_vector[6,:], car0_trajectory.pos_tck)
     plotter.set_ref_point(x_ref, y_ref)
 
@@ -264,17 +273,27 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         break
 
     
-    #update horizon plotter
+    #update horizon plotter and mujoco markers
     horizon = np.array(np.reshape(car0_controller.ocp_solver.get(0, 'x'),(-1,1)))
-    for i in range(car0_controller.parameters.N-1):
-        x_temp   = car0_controller.ocp_solver.get(i+1, 'x')
+    for i in range(car0_controller.parameters.N):
+        x_temp   = car0_controller.ocp_solver.get(i, 'x')
         x_temp = np.reshape(x_temp, (-1,1))
         horizon = np.append(horizon, x_temp, axis = 1)
+
+        try:
+            id = simulator.model.body(f"mpcc_{i}").id
+            
+            id = simulator.model.body_mocapid[id]
+            simulator.data.mocap_pos[id] = np.concatenate((x_temp[:2, 0], np.array([0])))
+
+        except Exception as e:
+            print(e)
+
     plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
     #input("Press enter to continue")
 
 
-    
+
 
 simulator.close()
 
