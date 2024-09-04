@@ -1,5 +1,5 @@
 import numpy as np
-from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory
+from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
 
 def quat_2_yaw(quat):
     x = quat[0]
@@ -94,7 +94,7 @@ def cosine_arc_length(amplitude, frequency, start, end):
     return arc_length
 
 
-def null_infty(laps = 1):
+def null_infty(laps = 1, scale = 1):
     path_points = 1.1*np.array([[0,0],
                        [1*np.cos(-np.pi/4), 1.5+np.sin(-np.pi/4)],
                         [1*np.cos(np.pi/8), 1.5+np.sin(-np.pi/8)],
@@ -151,7 +151,7 @@ def null_infty(laps = 1):
                        [-1,-1.5],
                         [1*np.cos(-9*np.pi/8), -1.5+np.sin(-9*np.pi/8)],
                         [1*np.cos(-10*np.pi/8), -1.5+np.sin(-10*np.pi/8)],
-                       ])
+                       ]) * scale
     points = path_points
     for i in range(laps-1):
         points = np.concatenate((points, path_points))

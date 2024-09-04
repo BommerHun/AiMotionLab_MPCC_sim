@@ -59,22 +59,22 @@
         "idxsphi_e": [],
         "lbu": [
             0.1,
-            -1000.0,
-            -10.0
+            -10000.0,
+            -1000.0
         ],
         "lbx": [
             0.0,
-            0.08,
+            0.05,
             -0.6
         ],
         "lbx_0": [
             0.0,
             0.0,
             0.64424,
-            0.001,
+            0.1,
             0.0,
             0.0,
-            3.318577544280524e-05,
+            0.01,
             0.25,
             0.0
         ],
@@ -106,8 +106,8 @@
         "lsphi_e": [],
         "ubu": [
             15.0,
-            1000.0,
-            10.0
+            10000.0,
+            1000.0
         ],
         "ubx": [
             29.96471675522919,
@@ -118,10 +118,10 @@
             0.0,
             0.0,
             0.64424,
-            0.001,
+            0.1,
             0.0,
             0.0,
-            3.318577544280524e-05,
+            0.01,
             0.25,
             0.0
         ],
@@ -202,7 +202,7 @@
         "/usr/include/python3.10"
     ],
     "dims": {
-        "N": 14,
+        "N": 16,
         "nbu": 3,
         "nbx": 3,
         "nbx_0": 9,
@@ -243,7 +243,7 @@
     },
     "json_file": "acados_c_generated/acados_ocp_0.json",
     "model": {
-        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*sign(vxi))), vertcat(((sq(@1)/2500)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/900)), ((sq(@1)/2500)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/900)))",
+        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*sign(vxi))), vertcat(((sq(@1)/100000000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/1000000)), ((sq(@1)/100000000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/1000000)))",
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -258,8 +258,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(5*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(100*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(1.5*thetadot))+(0.05*fabs(ddot)))+(5*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((250*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(120*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.2*thetadot))+(0.25*fabs(ddot)))+(0.25*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((250*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(120*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.2*thetadot))+(0.25*fabs(ddot)))+(0.25*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -302,7 +302,7 @@
     "problem_class": "OCP",
     "shared_lib_ext": ".so",
     "solver_options": {
-        "Tsim": 0.049999999999999996,
+        "Tsim": 0.05,
         "alpha_min": 0.05,
         "alpha_reduction": 0.7,
         "as_rti_iter": 1,
@@ -355,11 +355,11 @@
         "rti_log_residuals": 0,
         "shooting_nodes": [
             0.0,
-            0.049999999999999996,
-            0.09999999999999999,
-            0.15,
-            0.19999999999999998,
-            0.24999999999999997,
+            0.05,
+            0.1,
+            0.15000000000000002,
+            0.2,
+            0.25,
             0.3,
             0.35,
             0.39999999999999997,
@@ -368,9 +368,13 @@
             0.5499999999999999,
             0.6,
             0.65,
-            0.7000000000000001
+            0.7000000000000001,
+            0.7500000000000001,
+            0.8000000000000002
         ],
         "sim_method_jac_reuse": [
+            0,
+            0,
             0,
             0,
             0,
@@ -402,6 +406,8 @@
             4,
             4,
             4,
+            4,
+            4,
             4
         ],
         "sim_method_num_steps": [
@@ -418,24 +424,28 @@
             1,
             1,
             1,
+            1,
+            1,
             1
         ],
-        "tf": 0.7,
+        "tf": 0.8,
         "time_steps": [
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996,
-            0.049999999999999996
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05,
+            0.05
         ],
         "with_solution_sens_wrt_params": false,
         "with_value_sens_wrt_params": false

@@ -7,20 +7,20 @@ from scipy.signal import butter, filtfilt
 from aimotion_f1tenth_simulator.classes.active_simulation import ActiveSimulator
 from aimotion_f1tenth_simulator.util import xml_generator
 from aimotion_f1tenth_simulator.classes.car import Car
-from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarMPCCController
+from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
+from aimotion_f1tenth_simulator.classes.car_classes import CarMPCCController
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
 from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty, dented_paperclip, paperclip
 from aimotion_f1tenth_simulator.classes.original_trajectories import race_track, hungaroring
-from aimotion_f1tenth_simulator.classes.car_classes import Theta_opt
 import yaml
 from scipy.interpolate import splev
 
-alpha = 1
-omega_filt = 0
-v_eta_filt = 0
-GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
+
+
+lin_tire = False
+GUI = False # if True the simulator window will be visible, if False the simulator will run in the background 
 
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
@@ -39,7 +39,7 @@ save_filename = "built_scene.xml" # the name of the xml file that will be create
 
 #MPCC param file
 parent_dir = os.path.dirname(os.path.dirname(__file__))
-file_name = os.path.join(parent_dir, "examples/Simulator_config.yaml")
+file_name = os.path.join(parent_dir, "examples/race_config.yaml")
 with open(file_name) as file:
     params = yaml.full_load(file)
 
@@ -66,9 +66,10 @@ scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 
 
 #Adding the f1tenth vehicle
+x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
 
-car0_name = scene.add_car(pos="31.57 -31.3018 0",
-                          quat=carHeading2quaternion(2.4525),
+car0_name = scene.add_car(pos=f"{x0[0]} {x0[1]} 0",
+                          quat=carHeading2quaternion(x0[2]),
                           color=RED_COLOR,
                           is_virtual=True,
                           has_rod=False,)
@@ -78,7 +79,6 @@ car0_name = scene.add_car(pos="31.57 -31.3018 0",
                           #wheel_radius=wheel_radius) # add the car to the scene
 
 
-x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
 
 #MPCC horizon markers
 horizon_markers = scene.add_MPCC_markers(args["MPCC_params"]["N"], BLUE_COLOR, "0 0 0", quat = carHeading2quaternion(0.64424), size=0.1)
@@ -90,9 +90,6 @@ car0_trajectory=CarTrajectory()
 path, v = hungaroring()
 car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 
-theta_finder = Theta_opt(x0[:2], np.array([0, 5]), car0_trajectory.evol_tck, car0_trajectory.pos_tck)
-
-theta0 = theta_finder.solve()
 
 
 #Reference trajectory points:
@@ -146,7 +143,7 @@ car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
 
 
 
-car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = True, MPCC_params= args["MPCC_params"])
+car0_controller = CarMPCCController(vehicle_params= args["vehicle_params"], mute = False, MPCC_params= args["MPCC_params"], lin_tire= lin_tire)
 
 # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
 car0_controllers = [car0_controller]
@@ -158,7 +155,7 @@ def update_controller_type(state, setpoint, time, i):
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
 
-car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0, theta0)
+car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0)
 car0.set_controllers(car0_controllers)
 
 
@@ -221,6 +218,9 @@ din_sim_data["phi"] = [x0[2]]
 din_sim_data["v_xi"] = [x0[3]]
 din_sim_data["v_eta"] = [x0[4]]
 din_sim_data["omega"] = [x0[5]]
+u_sim = np.zeros((2,1))
+errors = np.array(np.zeros((4,1)))
+
 
 while( not (simulator.glfw_window_should_close()) & (car0_controller.finished == False)): # the loop runs until the window is closed
     # the simulator also has an iterator that counts simualtion steps (simulator.i) and a simualtion time (simulator.time) attribute that can be used to simualte specific scenarios
@@ -230,6 +230,11 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
         simulator.update_()
   
     
+    u_sim = np.append(u_sim, np.reshape(car0_controller.input, (-1,1)), axis = 1)
+    error = car0_controller.get_errors()
+    error = np.array([error["contouring"], error["longitudinal"], error["progress"], error["c_t"]])
+    error = np.reshape(error, (-1,1))
+    errors = np.append(errors, error, axis = 1)
 
     st = car0_controller.prev_state
     (x_ref, y_ref) = splev(car0_controller.state_vector[6,:], car0_trajectory.pos_tck)
@@ -254,12 +259,8 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
     din_sim_data["v_eta"].append(x0[4])
     din_sim_data["omega"].append(x0[5])
 
-    # get errors
-    errors = car0_controller.get_errors()
-    contouring_errors.append(errors["contouring"])
-    longitudinal_errors.append(errors["longitudinal"])
     
-    freq.append(car0_controller.freq)
+    freq.append(car0_controller.c_t)
 
     # get control inputs
     inputs= car0_controller.get_inputs()
@@ -297,82 +298,77 @@ while( not (simulator.glfw_window_should_close()) & (car0_controller.finished ==
 
 simulator.close()
 
-# plot simulation results
+#Creating simulation result plots
+s = np.linspace(0, car0_controller.trajectory.L,1000)
+
+
 plt.figure()
-plt.plot(np.array(car0_controller.trajectory.spl_sx(s)), np.array(car0_controller.trajectory.spl_sy(s)), "b", label = "Reference trajectory")
-plt.plot(x,y, "r", label = "Vehicle trajectory")
-plt.legend(loc = "upper left")
+plt.title("Trajectory")
+plt.plot(car0_controller.trajectory.spl_sx(s), car0_controller.trajectory.spl_sy(s))
+plt.plot(x, y)
+plt.scatter(x, y, c = v_xi,s = 15,cmap = "Reds")
 plt.axis("equal")
-plt.xlim((-15,100))
-plt.ylim((-50,70))
-#plt.plot(din_sim_data["x"], din_sim_data["y"], "g")
-plt.axis('equal')
-plt.xlabel("x [m]")
-plt.ylabel("y [m]")
-plt.title("Simulation result")
-plt.show(block=False)
+
+plt.xlabel("x[m]")
+plt.ylabel("y[m]")
 
 
+fig, axs = plt.subplots(2,1, figsize = (10,6))
 
-fix, axs = plt.subplots(2, 1)
-axs[0].plot(t,contouring_errors)
-axs[0].set_ylabel("Lateral error (m)")
-axs[0].set_xlabel("Time (s)")
-axs[1].plot(t,longitudinal_errors)
-axs[1].set_ylabel("Longitudinal error (m)")
-axs[1].set_xlabel("Time (s)")
+axs[0].title.set_text("Computing time historgram")
+axs[0].hist(errors[3,1:-1]*1000)
+axs[0].axvline(x = car0_controller.MPCC_params["Tf"]/car0_controller.MPCC_params["N"]*1000, color = 'r', label = 'sampling time [ms]')
+axs[0].legend()
+axs[0].set_xlabel("Computing time [ms]")
+axs[0].set_ylabel("Number of iterations [-]")
+axs[0].set_xlim(left = 0)
 
+axs[1].title.set_text("Computing time")
+axs[1].set_xlabel("Iteration [-]")
+axs[1].set_ylabel("Computing time [ms]")
+axs[1].plot(np.arange(np.shape(errors[3,1:-1])[0]),errors[3,1:-1]*1000 , label = "computing time [ms]")
+axs[1].axhline(y = car0_controller.MPCC_params["Tf"]/car0_controller.MPCC_params["N"]*1000, color = 'r', label = 'sampling time [ms]')
+axs[1].legend()
 
-fix, axs = plt.subplots(5, 2)
-
-axs[0, 0].set_title("x")
-axs[0][0].plot(t, x)
-axs[0][0].plot(t, din_sim_data["x"][:-1], "g")
-
-axs[1, 0].set_title("y")
-axs[1][0].plot(t, y)
-axs[1][0].plot(t, din_sim_data["y"][:-1], "g")
-
-axs[2, 0].set_title("phi")
-axs[2][0].plot(t, phi)
-axs[2][0].plot(t, din_sim_data["phi"][:-1],"g")
-
-axs[0, 1].set_title("v_xi")
-axs[0][1].plot(t, v_xi)
-axs[0][1].plot(t, din_sim_data["v_xi"][:-1],"g")
-
-axs[1, 1].set_title("v_eta")
-axs[1][1].plot(t, v_eta)
-axs[1][1].plot(t, din_sim_data["v_eta"][:-1],"g")
-
-axs[2, 1].set_title("omega")
-axs[2][1].plot(t, omega)
-axs[2][1].plot(t,din_sim_data["omega"][:-1],"g")
-
-axs[3, 0].set_title("d")
-axs[3][0].plot(t, d)
+plt.tight_layout()
 
 
-axs[3, 1].set_title("delta")
-axs[3][1].plot(t, delta)
+fig, axs = plt.subplots(3,1, figsize = (10,6))
 
 
-axs[4, 0].set_title("theta")
-axs[4][0].plot(t, theta)
+axs[0].title.set_text("Contouring error")
+axs[0].set_xlabel("Iteration [-]")
+axs[0].set_ylabel("e_c [m]")
+axs[0].plot(np.arange(np.shape(errors[0,:-1])[0]),errors[0,:-1] )
 
-axs[4, 1].set_title("theta_dot")
-axs[4][1].plot(t, theta_dot)
+axs[1].title.set_text("Longitinal error")
+axs[1].set_xlabel("Iteration [-]")
+axs[1].set_ylabel("e_l [m]")
+axs[1].plot(np.arange(np.shape(errors[1,:-1])[0]),errors[1,:-1] )
 
 
+axs[2].title.set_text("Progress")
+axs[2].set_xlabel("Iteration [-]")
+axs[2].set_ylabel("θ [m]")
+axs[2].plot(np.arange(np.shape(errors[2,:-1])[0]),errors[2,:-1] )
 
-plt.figure()
+plt.tight_layout()
 
-plt.plot(t, freq)
-plt.ylim([0,600])
-plt.title("Computing frequency")
-plt.ylabel("frequency (Hz)")
-plt.xlabel("time (s)")
-plt.ion()
-plt.show()
+fig, axs = plt.subplots(2,1, figsize = (10,6))
+
+axs[0].title.set_text("Motor reference")
+axs[0].set_xlabel("Iteration [-]")
+axs[0].set_ylabel("d [-]")
+axs[0].plot(np.arange(np.shape(u_sim[0,1:-1])[0]),u_sim[0,1:-1] )
+
+
+axs[1].title.set_text("Steering servo reference")
+axs[1].set_xlabel("Iteration [-]")
+axs[1].set_ylabel("δ [-]")
+axs[1].plot(np.arange(np.shape(u_sim[1,1:-1])[0]),u_sim[1,1:-1] )
+
+plt.tight_layout()
+plt.show
+
 
 input("Press enter to close")

@@ -1,0 +1,57 @@
+parameter_server:
+  ros__parameters:
+    car_id: JoeBush1
+    # radio params
+    radio_channel: 100
+    devid: 0
+
+    # model params
+    vehicle_params:
+      C_f: 41.7372
+      C_r: 29.4662
+      l_f: 0.163
+      l_r: 0.168
+      C_m1: 61.4282
+      C_m2: 3.012
+      C_m3: 0.604
+      m: 2.96
+      I_z: 0.0796 # [kg m^2]
+
+    controllers:
+      MPCC:
+        mu_xi: 10000
+        mu_eta: 50
+        res_limit: 100.0
+        freq_limit: 0
+        #Input constraints
+        delta_max: 0.6 # [rad]
+        d_max: 0.4
+        d_min: 0.05      
+        opt_tol: 0.01
+        #Incremental input constraints        
+
+        ddot_max: 10000.0
+        deltadot_max: 1000.0
+        thetahatdot_min: 0.1
+        thetahatdot_max: 15
+
+        #Optimisation parameters:
+        max_QP_iter: 5
+        N: 16 #number of shooting nodes
+        Tf: 0.8 #[s] time lenght of the opt. horizon
+        #Cost weights:
+        q_con: 60.0
+        q_long: 120.0
+        q_theta: 3.5
+        q_d: 0.25
+        q_delta: 3
+
+    crazy_observer:
+      CUTOFF: 60.5
+      FREQUENCY: 20.0
+      MARKER_OFFSET: 0.0
+    drive_bridge:
+      MOTOR_LIMIT: 0.35
+      STEERING_GAINS:
+      - -0.90616 #-0.8  #-0.90616
+      -  0.54172 #  0.5  #0.54172

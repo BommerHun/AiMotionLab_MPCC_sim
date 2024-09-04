@@ -1,5 +1,5 @@
 import numpy as np
-from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory
+from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
 
 def hungaroring():
     points = [43.91689596776509,0.0,12.109501663065585
