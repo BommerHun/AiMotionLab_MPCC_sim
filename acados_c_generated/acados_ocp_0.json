@@ -58,24 +58,24 @@
         "idxsphi_0": [],
         "idxsphi_e": [],
         "lbu": [
-            0.1,
+            0.001,
             -10000.0,
-            -1000.0
+            -10000.0
         ],
         "lbx": [
             0.0,
-            0.05,
+            0.08,
             -0.6
         ],
         "lbx_0": [
+            0.1,
             0.0,
-            0.0,
-            0.64424,
+            0.7853981633974483,
             0.1,
             0.0,
             0.0,
             0.01,
-            0.25,
+            0.3,
             0.0
         ],
         "lbx_e": [],
@@ -105,24 +105,24 @@
         "lsphi_0": [],
         "lsphi_e": [],
         "ubu": [
-            15.0,
+            8.0,
             10000.0,
-            1000.0
+            10000.0
         ],
         "ubx": [
-            29.96471675522919,
-            0.25,
+            13.704497588128937,
+            0.3,
             0.6
         ],
         "ubx_0": [
+            0.1,
             0.0,
-            0.0,
-            0.64424,
+            0.7853981633974483,
             0.1,
             0.0,
             0.0,
             0.01,
-            0.25,
+            0.3,
             0.0
         ],
         "ubx_e": [],
@@ -202,7 +202,7 @@
         "/usr/include/python3.10"
     ],
     "dims": {
-        "N": 16,
+        "N": 15,
         "nbu": 3,
         "nbx": 3,
         "nbx_0": 9,
@@ -243,7 +243,7 @@
     },
     "json_file": "acados_c_generated/acados_ocp_0.json",
     "model": {
-        "con_h_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*sign(vxi))), vertcat(((sq(@1)/100000000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/1000000)), ((sq(@1)/100000000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/1000000)))",
+        "con_h_expr": "@1=(((52.4282*d)-(5.2465*vxi))-(1.1194*sign(vxi))), vertcat(((sq(@1)/10000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/144)), ((sq(@1)/10000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/144)))",
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -258,8 +258,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((250*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(120*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.2*thetadot))+(0.25*fabs(ddot)))+(0.25*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((250*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(120*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.2*thetadot))+(0.25*fabs(ddot)))+(0.25*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.4*thetadot))+(0.005*fabs(ddot)))+(0.4*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.4*thetadot))+(0.005*fabs(ddot)))+(0.4*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -279,7 +279,7 @@
         "dyn_disc_fun_jac_hess": null,
         "dyn_ext_fun_type": "casadi",
         "dyn_generic_source": null,
-        "f_expl_expr": "@1=(((61.4282*d)-(3.012*vxi))-(0.604*sign(vxi))), @2=(41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))), @3=(29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))), vertcat(((vxi*cos(phi))-(veta*sin(phi))), ((vxi*sin(phi))+(veta*cos(phi))), omega, (0.337838*(((@1+(@1*cos(delta)))-(@2*sin(delta)))+((2.96*veta)*omega))), (0.337838*(((@3+(@1*sin(delta)))+(@2*cos(delta)))-((2.96*vxi)*omega))), (12.5628*((((0.163*@2)*cos(delta))+((0.163*@1)*sin(delta)))-(0.168*@3))), thetadot, ddot, deltadot)",
+        "f_expl_expr": "@1=(((52.4282*d)-(5.2465*vxi))-(1.1194*sign(vxi))), @2=(41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))), @3=(29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))), vertcat(((vxi*cos(phi))-(veta*sin(phi))), ((vxi*sin(phi))+(veta*cos(phi))), omega, (0.344828*(((@1+(@1*cos(delta)))-(@2*sin(delta)))+((2.9*veta)*omega))), (0.344828*(((@3+(@1*sin(delta)))+(@2*cos(delta)))-((2.9*vxi)*omega))), (12.5628*((((0.163*@2)*cos(delta))+((0.163*@1)*sin(delta)))-(0.168*@3))), thetadot, ddot, deltadot)",
         "f_impl_expr": null,
         "gnsf": {
             "nontrivial_f_LO": 1,
@@ -369,11 +369,9 @@
             0.6,
             0.65,
             0.7000000000000001,
-            0.7500000000000001,
-            0.8000000000000002
+            0.7500000000000001
         ],
         "sim_method_jac_reuse": [
-            0,
             0,
             0,
             0,
@@ -407,7 +405,6 @@
             4,
             4,
             4,
-            4,
             4
         ],
         "sim_method_num_steps": [
@@ -425,12 +422,10 @@
             1,
             1,
             1,
-            1,
             1
         ],
-        "tf": 0.8,
+        "tf": 0.75,
         "time_steps": [
-            0.05,
             0.05,
             0.05,
             0.05,

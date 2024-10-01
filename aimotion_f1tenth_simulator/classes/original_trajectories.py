@@ -1,7 +1,7 @@
 import numpy as np
 from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
 
-def hungaroring():
+def hungaroring(scale = 1):
     points = [43.91689596776509,0.0,12.109501663065585
 ,43.56214913604345,0.0,12.402161689443439
 ,43.20736744378201,0.0,12.69477738130894
@@ -879,7 +879,6 @@ def hungaroring():
 ,44.626266469565124,0.0,11.524025243772511
 ,44.271603247950814,0.0,11.81679141543514]
 
-    scale = 1
     points = np.reshape(points, (-1,3))
     points = np.column_stack((points[::,0], points[::,2]))
     points = points*scale

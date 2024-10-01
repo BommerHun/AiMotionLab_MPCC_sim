@@ -360,14 +360,17 @@ class Casadi_MPCC:
 
 
         #e_c = cs.vec(e_c[0, :] + e_c[1, :])
-
+        """
         e_c = cs.dot(n.T,(point_r-point))
         
-
         err = point_r-point
         e_c = cs.diag(err @ n)
         e_c = e_c.T @ e_c
+        """
 
+        e_c = (point_r-point)*n.T
+        e_c = cs.vec(e_c[0, :] + e_c[1, :])
+        e_c = e_c.T @ e_c
         return e_c
 
     def e_l(self, point, theta):
@@ -380,12 +383,18 @@ class Casadi_MPCC:
         point_r, v = self.est_ref_pos(theta)
         e_l = (point_r-point)*v.T
         #e_l = cs.vec(e_l[0, :]+e_l[1, :])
-        
+        """
         e_l = cs.dot(v.T,(point_r-point))
 
         err = point_r-point
         e_l = cs.diag(err @ v)
         e_l = e_l.T @ e_l
+        """
+
+        e_l = (point_r-point)*v.T
+        e_l = cs.vec(e_l[0, :]+e_l[1, :])
+        e_l = e_l.T @ e_l
+
         return e_l
 
     def est_ref_pos(self, theta):

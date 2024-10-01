@@ -1,7 +1,7 @@
 
 # Short script to test current mpcc model
 from aimotion_f1tenth_simulator.classes.car_classes import CarMPCCController
-from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
+from aimotion_f1tenth_simulator.classes.mpcc_util.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
 from aimotion_f1tenth_simulator.classes.trajectory_generators import null_infty
 import numpy as np

@@ -10,7 +10,7 @@ from aimotion_f1tenth_simulator.classes.car import Car
 from aimotion_f1tenth_simulator.classes.car_classes import CarTrajectory, CarMPCCController
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
-from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
+from aimotion_f1tenth_simulator.classes.mpcc_util.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty, dented_paperclip, paperclip
 from aimotion_f1tenth_simulator.classes.original_trajectories import race_track, hungaroring
 from aimotion_f1tenth_simulator.classes.car_classes import Theta_opt

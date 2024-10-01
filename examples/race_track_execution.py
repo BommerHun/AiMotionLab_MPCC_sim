@@ -11,16 +11,17 @@ from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
 from aimotion_f1tenth_simulator.classes.car_classes import CarMPCCController
 from aimotion_f1tenth_simulator.util import mujoco_helper, carHeading2quaternion
 from aimotion_f1tenth_simulator.classes.object_parser import parseMovingObjects
-from aimotion_f1tenth_simulator.classes.MPCC_plotter import MPCC_plotter
+from aimotion_f1tenth_simulator.classes.mpcc_util.MPCC_plotter import MPCC_plotter
 from aimotion_f1tenth_simulator.classes.trajectory_generators import eight, null_paperclip, null_infty, dented_paperclip, paperclip
 from aimotion_f1tenth_simulator.classes.original_trajectories import race_track, hungaroring
 import yaml
 from scipy.interpolate import splev
-
+from matplotlib.collections import LineCollection
 
 
 lin_tire = False
 GUI = False # if True the simulator window will be visible, if False the simulator will run in the background 
+scale = 0.4
 
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
@@ -39,7 +40,7 @@ save_filename = "built_scene.xml" # the name of the xml file that will be create
 
 #MPCC param file
 parent_dir = os.path.dirname(os.path.dirname(__file__))
-file_name = os.path.join(parent_dir, "examples/race_config.yaml")
+file_name = os.path.join(parent_dir, "examples/Simulator_config.yaml")
 with open(file_name) as file:
     params = yaml.full_load(file)
 
@@ -66,7 +67,7 @@ scene = xml_generator.SceneXmlGenerator(xml_base_filename) # load the base scene
 
 
 #Adding the f1tenth vehicle
-x0 = np.array([31.57, -31.3018,2.4525,0,0,0])
+x0 = np.array([31.57*scale, -31.3018*scale,2.4525,0,0,0])
 
 car0_name = scene.add_car(pos=f"{x0[0]} {x0[1]} 0",
                           quat=carHeading2quaternion(x0[2]),
@@ -87,7 +88,7 @@ horizon_markers = scene.add_MPCC_markers(args["MPCC_params"]["N"], BLUE_COLOR, "
 car0_trajectory=CarTrajectory()
 
 
-path, v = hungaroring()
+path, v = hungaroring(scale = scale)
 car0_trajectory.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 
 
@@ -102,7 +103,6 @@ s=splev(t_eval, car0_trajectory.evol_tck)
 (x,y) = splev(s, car0_trajectory.pos_tck)
 
 ref_traj_markers = scene.add_trajectory_markers(x,y,BLACK_COLOR, size = 0.05)
-
 
 
 
@@ -131,6 +131,7 @@ simulator = ActiveSimulator(xml_filename, rec_interval, control_step, graphics_s
 
 # grabbing the car
 car0 = simulator.get_MovingObject_by_name_in_xml(car0_name)
+car0.set_drivetrain_parameters(C_m1 = args["vehicle_params"]["C_m1"], C_m2 = args["vehicle_params"]["C_m2"], C_m3 = args["vehicle_params"]["C_m3"])
 
 # additional modeling opportunities: the drivetrain parameters can be adjusted
 #car0.set_drivetrain_parameters(C_m1=40, C_m2=3, C_m3=0.5) # if not specified the default values will be used 
@@ -301,13 +302,33 @@ simulator.close()
 #Creating simulation result plots
 s = np.linspace(0, car0_controller.trajectory.L,1000)
 
+plt.figure()
+plt.plot(car0_controller.trajectory.spl_sx(s), car0_controller.trajectory.spl_sy(s))
+plt.axis('equal')
+plt.xlabel("x[m]")
+plt.ylabel("y[m]")
+plt.grid(True)
+
 
 plt.figure()
-plt.title("Trajectory")
 plt.plot(car0_controller.trajectory.spl_sx(s), car0_controller.trajectory.spl_sy(s))
-plt.plot(x, y)
-plt.scatter(x, y, c = v_xi,s = 15,cmap = "Reds")
-plt.axis("equal")
+
+points = np.array([x, y]).T.reshape(-1,1,2)
+
+segments = np.concatenate([points[:-1], points[1:]], axis = 1)
+
+norm = plt.Normalize(vmin =0, vmax=6)
+lc = LineCollection(segments=segments, cmap = "turbo", norm=norm)
+lc.set_array(v_xi)
+lc.set_linewidth(2)
+
+plt.gca().add_collection(lc)
+plt.xlabel("x[m]")
+plt.ylabel("y[m]")
+cbar = plt.colorbar(lc, label = '$v_{\\xi}$')
+plt.axis('equal')
+plt.grid(True)
+
 
 plt.xlabel("x[m]")
 plt.ylabel("y[m]")
@@ -333,28 +354,9 @@ axs[1].legend()
 plt.tight_layout()
 
 
-fig, axs = plt.subplots(3,1, figsize = (10,6))
+fig, axs = plt.subplots(3,1)
 
 
-axs[0].title.set_text("Contouring error")
-axs[0].set_xlabel("Iteration [-]")
-axs[0].set_ylabel("e_c [m]")
-axs[0].plot(np.arange(np.shape(errors[0,:-1])[0]),errors[0,:-1] )
-
-axs[1].title.set_text("Longitinal error")
-axs[1].set_xlabel("Iteration [-]")
-axs[1].set_ylabel("e_l [m]")
-axs[1].plot(np.arange(np.shape(errors[1,:-1])[0]),errors[1,:-1] )
-
-
-axs[2].title.set_text("Progress")
-axs[2].set_xlabel("Iteration [-]")
-axs[2].set_ylabel("θ [m]")
-axs[2].plot(np.arange(np.shape(errors[2,:-1])[0]),errors[2,:-1] )
-
-plt.tight_layout()
-
-fig, axs = plt.subplots(2,1, figsize = (10,6))
 
 axs[0].title.set_text("Motor reference")
 axs[0].set_xlabel("Iteration [-]")
@@ -364,11 +366,21 @@ axs[0].plot(np.arange(np.shape(u_sim[0,1:-1])[0]),u_sim[0,1:-1] )
 
 axs[1].title.set_text("Steering servo reference")
 axs[1].set_xlabel("Iteration [-]")
-axs[1].set_ylabel("δ [-]")
+axs[1].set_ylabel("$\\delta$ [-]")
 axs[1].plot(np.arange(np.shape(u_sim[1,1:-1])[0]),u_sim[1,1:-1] )
 
+
+axs[2].title.set_text("Errors")
+axs[2].set_xlabel("Iteration [-]")
+axs[2].set_ylabel("errors [m]")
+axs[2].plot(np.arange(np.shape(errors[0,1:-1])[0]),errors[0,1:-1], label = '$e_c$ [m]')
+axs[2].plot(np.arange(np.shape(errors[1,1:-1])[0]),errors[1,1:-1], label = '$e_l$ [m]')
+axs[2].legend()
+for ax in axs:
+    ax.grid(True)
+
 plt.tight_layout()
-plt.show
+plt.show()
 
 
 input("Press enter to close")

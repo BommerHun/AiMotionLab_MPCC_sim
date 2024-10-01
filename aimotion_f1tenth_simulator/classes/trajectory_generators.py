@@ -1,5 +1,8 @@
 import numpy as np
 from aimotion_f1tenth_simulator.classes.traj_classes import CarTrajectory
+import casadi as cs
+import matplotlib.pyplot as plt
+
 
 def quat_2_yaw(quat):
     x = quat[0]
@@ -94,6 +97,37 @@ def cosine_arc_length(amplitude, frequency, start, end):
     return arc_length
 
 
+def slalom(loops = 2, r = 1, x0 = 0, y0= 0):
+    elements = 10
+    angle = np.linspace(0, np.pi*(elements)/elements, elements)
+    x = np.sin(angle)*r  + x0
+    y = np.cos(angle)*r-r +y0
+    path_points = np.array([x[0], y[0]])  # Use a 2D array (shape (1, 2))
+
+    # Forward loop for creating the slalom path
+    for l_index in range(loops):
+        neg = 1 if l_index % 2 == 0 else -1  # Alternate direction
+        for i in range(1, elements):
+            point = np.array([[x[i] * neg , y[i] - l_index * r * 2 ]])  # Create a 2D array for each point
+            path_points = np.vstack([path_points, point])
+    
+
+    # Backward loop for returning along the path
+    for l_index in range(loops - 1, 0, -1):
+        neg = -1 if l_index % 2 == 0 else 1  # Alternate direction
+        for i in range(1, elements):
+            point = np.array([[x[elements-i-1] * neg , -y[i] - (loops - l_index + 1) * 2 * r ]])  # Create a 2D array
+            path_points = np.vstack([path_points, point])
+    
+    # Final loop to close the path
+    for i in range(1, elements):
+        point = np.array([[-x[i] + x0, -y[i] - 2 * r + y0]])  # Closing the path
+        path_points = np.vstack([path_points, point])
+    
+    vvelocities = np.ones([path_points.shape[0], 1])
+   
+    return path_points, vvelocities
+
 def null_infty(laps = 1, scale = 1):
     path_points = 1.1*np.array([[0,0],
                        [1*np.cos(-np.pi/4), 1.5+np.sin(-np.pi/4)],
@@ -158,6 +192,7 @@ def null_infty(laps = 1, scale = 1):
     
     points = np.concatenate((points, np.zeros((1,2))))
     vvelocities = np.ones([points.shape[0], 1])
+    
     return points, vvelocities
 
 def eight():
@@ -191,7 +226,7 @@ def eight():
 
 
 def null_paperclip():
-    points = 1.5*np.array([[0,0],
+    points = 1.1*np.array([[0,0],
                        [1*np.cos(-np.pi/4), 1.5+np.sin(-np.pi/4)],
                         [1*np.cos(np.pi/8), 1.5+np.sin(-np.pi/8)],
                        [1, 1.5],
