@@ -74,7 +74,7 @@ int f1tenth_bicycle_model_reverse_acados_sim_create(f1tenth_bicycle_model_revers
     bool tmp_bool;
 
     
-    double Tsim = 0.025;
+    double Tsim = 0.05;
 
     
     // explicit ode

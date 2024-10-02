@@ -409,7 +409,7 @@ void f1tenth_bicycle_model_reverse_acados_create_5_set_nlp_in(f1tenth_bicycle_mo
         f1tenth_bicycle_model_reverse_acados_update_time_steps(capsule, N, new_time_steps);
     }
     else
-    {double time_step = 0.025;
+    {double time_step = 0.05;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -462,16 +462,16 @@ void f1tenth_bicycle_model_reverse_acados_create_5_set_nlp_in(f1tenth_bicycle_mo
     double* lbx0 = lubx0;
     double* ubx0 = lubx0 + NBX0;
     // change only the non-zero elements:
-    lbx0[0] = -1.530471830291768;
-    ubx0[0] = -1.530471830291768;
-    lbx0[1] = -3.4496002849065985;
-    ubx0[1] = -3.4496002849065985;
-    lbx0[2] = 4.753060793824004;
-    ubx0[2] = 4.753060793824004;
-    lbx0[3] = -1.5;
-    ubx0[3] = -1.5;
-    lbx0[4] = -0.000000009818365898310326;
-    ubx0[4] = -0.000000009818365898310326;
+    lbx0[0] = -1.4760691534767292;
+    ubx0[0] = -1.4760691534767292;
+    lbx0[1] = -4.0574010064385195;
+    ubx0[1] = -4.0574010064385195;
+    lbx0[2] = 4.734037492610018;
+    ubx0[2] = 4.734037492610018;
+    lbx0[3] = -0.5;
+    ubx0[3] = -0.5;
+    lbx0[4] = -0.000000009845580752572514;
+    ubx0[4] = -0.000000009845580752572514;
     lbx0[5] = 0.1;
     ubx0[5] = 0.1;
 
@@ -544,9 +544,8 @@ void f1tenth_bicycle_model_reverse_acados_create_5_set_nlp_in(f1tenth_bicycle_mo
     double* lbx = lubx;
     double* ubx = lubx + NBX;
     
-    ubx[0] = 2.5783092423897114;
+    ubx[0] = 4.358498459229503;
     lbx[1] = -0.1;
-    ubx[1] = -0.05;
     lbx[2] = -0.5;
     ubx[2] = 0.5;
 
@@ -708,11 +707,11 @@ void f1tenth_bicycle_model_reverse_acados_create_7_set_nlp_out(f1tenth_bicycle_m
 
     // initialize with x0
     
-    x0[0] = -1.530471830291768;
-    x0[1] = -3.4496002849065985;
-    x0[2] = 4.753060793824004;
-    x0[3] = -1.5;
-    x0[4] = -0.000000009818365898310326;
+    x0[0] = -1.4760691534767292;
+    x0[1] = -4.0574010064385195;
+    x0[2] = 4.734037492610018;
+    x0[3] = -0.5;
+    x0[4] = -0.000000009845580752572514;
     x0[5] = 0.1;
 
 

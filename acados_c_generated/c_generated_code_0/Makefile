@@ -36,42 +36,39 @@
 
 # model
 MODEL_SRC=
-MODEL_SRC+= f1tenth_bicycle_model_model/f1tenth_bicycle_model_expl_ode_fun.c
-MODEL_SRC+= f1tenth_bicycle_model_model/f1tenth_bicycle_model_expl_vde_forw.c
-MODEL_SRC+= f1tenth_bicycle_model_model/f1tenth_bicycle_model_expl_vde_adj.c
-MODEL_SRC+= f1tenth_bicycle_model_model/f1tenth_bicycle_model_expl_ode_hess.c
+MODEL_SRC+= f1tenth_bicycle_model_reverse_model/f1tenth_bicycle_model_reverse_expl_ode_fun.c
+MODEL_SRC+= f1tenth_bicycle_model_reverse_model/f1tenth_bicycle_model_reverse_expl_vde_forw.c
+MODEL_SRC+= f1tenth_bicycle_model_reverse_model/f1tenth_bicycle_model_reverse_expl_vde_adj.c
+MODEL_SRC+= f1tenth_bicycle_model_reverse_model/f1tenth_bicycle_model_reverse_expl_ode_hess.c
 MODEL_OBJ := $(MODEL_SRC:.c=.o)
 
 # optimal control problem - mostly CasADi exports
 OCP_SRC=
-OCP_SRC+= f1tenth_bicycle_model_constraints/f1tenth_bicycle_model_constr_h_fun_jac_uxt_zt.c
-OCP_SRC+= f1tenth_bicycle_model_constraints/f1tenth_bicycle_model_constr_h_fun.c
-OCP_SRC+= f1tenth_bicycle_model_constraints/f1tenth_bicycle_model_constr_h_fun_jac_uxt_zt_hess.c
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_0_fun.c
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_0_fun_jac.c
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_0_fun_jac_hess.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_0_fun.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_0_fun_jac.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_0_fun_jac_hess.c
 
 
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_fun.c
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_fun_jac.c
-OCP_SRC+= f1tenth_bicycle_model_cost/f1tenth_bicycle_model_cost_ext_cost_fun_jac_hess.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_fun.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_fun_jac.c
+OCP_SRC+= f1tenth_bicycle_model_reverse_cost/f1tenth_bicycle_model_reverse_cost_ext_cost_fun_jac_hess.c
 
 
 
-OCP_SRC+= acados_solver_f1tenth_bicycle_model.c
+OCP_SRC+= acados_solver_f1tenth_bicycle_model_reverse.c
 OCP_OBJ := $(OCP_SRC:.c=.o)
 
 # for sim solver
-SIM_SRC= acados_sim_solver_f1tenth_bicycle_model.c
+SIM_SRC= acados_sim_solver_f1tenth_bicycle_model_reverse.c
 SIM_OBJ := $(SIM_SRC:.c=.o)
 
 # for target example
-EX_SRC= main_f1tenth_bicycle_model.c
+EX_SRC= main_f1tenth_bicycle_model_reverse.c
 EX_OBJ := $(EX_SRC:.c=.o)
 EX_EXE := $(EX_SRC:.c=)
 
 # for target example_sim
-EX_SIM_SRC= main_sim_f1tenth_bicycle_model.c
+EX_SIM_SRC= main_sim_f1tenth_bicycle_model_reverse.c
 EX_SIM_OBJ := $(EX_SIM_SRC:.c=.o)
 EX_SIM_EXE := $(EX_SIM_SRC:.c=)
 
@@ -110,8 +107,8 @@ LDLIBS+= -lm
 LDLIBS+= 
 
 # libraries
-LIBACADOS_SOLVER=libacados_solver_f1tenth_bicycle_model.so
-LIBACADOS_OCP_SOLVER=libacados_ocp_solver_f1tenth_bicycle_model.so
+LIBACADOS_SOLVER=libacados_solver_f1tenth_bicycle_model_reverse.so
+LIBACADOS_OCP_SOLVER=libacados_ocp_solver_f1tenth_bicycle_model_reverse.so
 LIBACADOS_SIM_SOLVER=lib$(SIM_SRC:.c=.so)
 
 # virtual targets
@@ -164,7 +161,7 @@ ocp_cython: ocp_cython_o
 	-o acados_ocp_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_ocp_solver_pyx.o \
-	$(abspath .)/libacados_ocp_solver_f1tenth_bicycle_model.so \
+	$(abspath .)/libacados_ocp_solver_f1tenth_bicycle_model_reverse.so \
 	$(LDFLAGS) $(LDLIBS)
 
 # Sim Cython targets
@@ -191,7 +188,7 @@ sim_cython: sim_cython_o
 	-o acados_sim_solver_pyx.so \
 	-Wl,-rpath=$(LIB_PATH) \
 	acados_sim_solver_pyx.o \
-	$(abspath .)/libacados_sim_solver_f1tenth_bicycle_model.so \
+	$(abspath .)/libacados_sim_solver_f1tenth_bicycle_model_reverse.so \
 	$(LDFLAGS) $(LDLIBS)
 
 clean:
@@ -204,13 +201,13 @@ clean_ocp_shared_lib:
 	$(RM) $(OCP_OBJ)
 
 clean_ocp_cython:
-	$(RM) libacados_ocp_solver_f1tenth_bicycle_model.so
-	$(RM) acados_solver_f1tenth_bicycle_model.o
+	$(RM) libacados_ocp_solver_f1tenth_bicycle_model_reverse.so
+	$(RM) acados_solver_f1tenth_bicycle_model_reverse.o
 	$(RM) acados_ocp_solver_pyx.so
 	$(RM) acados_ocp_solver_pyx.o
 
 clean_sim_cython:
-	$(RM) libacados_sim_solver_f1tenth_bicycle_model.so
-	$(RM) acados_sim_solver_f1tenth_bicycle_model.o
+	$(RM) libacados_sim_solver_f1tenth_bicycle_model_reverse.so
+	$(RM) acados_sim_solver_f1tenth_bicycle_model_reverse.o
 	$(RM) acados_sim_solver_pyx.so
 	$(RM) acados_sim_solver_pyx.o

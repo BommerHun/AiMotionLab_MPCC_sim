@@ -605,8 +605,7 @@ void f1tenth_bicycle_model_acados_create_5_set_nlp_in(f1tenth_bicycle_model_solv
     double* lbx = lubx;
     double* ubx = lubx + NBX;
     
-    ubx[0] = 13.704497588128936;
-    lbx[1] = 0.08;
+    ubx[0] = 13.762955847400262;
     ubx[1] = 0.3;
     lbx[2] = -0.6;
     ubx[2] = 0.6;

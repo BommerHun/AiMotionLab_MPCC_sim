@@ -63,7 +63,7 @@ parameter_server:
         #Input constraints
         delta_max: 0.6 # [rad]
         d_max: 0.3
-        d_min: 0.08       
+        d_min: 0.00       
         opt_tol: 0.001
         #Incremental input constraints        
 

@@ -49,6 +49,8 @@ class SceneXmlGenerator:
         self._mocap_box_payload_cntr = 0
         self._mocap_teardrop_payload_cntr = 0
 
+        self.trajectory_markers = 0
+
         self._mocap_drone_names = []
         self._mocap_payload_names = []
 
@@ -241,13 +243,18 @@ class SceneXmlGenerator:
         return name
     
     def add_trajectory_markers(self, x,y, color, size = 0.01):
-        name = "ref_trajectory_body"
+
+        name = f"ref_trajectory_body{self.trajectory_markers}"
+        
+
         trajectory_ref = ET.SubElement(self.worldbody, "body", name = name, mocap = "true", pos = "0 0 0")
 
         for i in range(np.shape(x)[0]):
             marker = ET.SubElement(trajectory_ref, "geom", type = "sphere",size = f"{size}",contype="0", conaffinity="0", rgba = color, pos = f"{x[i]} {y[i]} 0")
 
-        ET.SubElement(self.contact, "exclude",name = "marker_exclude", body1= "Fleet1Tenth_0",body2=  name)
+
+        ET.SubElement(self.contact, "exclude",name = f"marker_exclude{self.trajectory_markers}", body1= "Fleet1Tenth_0",body2=  name)
+        self.trajectory_markers = self.trajectory_markers+1
 
     def add_MPCC_markers(self, n, color = "256 0 0", pos = "0 0 0", quat= "1 0 1", size = 0.1):
         markers = []

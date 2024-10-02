@@ -16,9 +16,9 @@
             2
         ],
         "idxbx": [
-            6,
-            7,
-            8
+            4,
+            5,
+            6
         ],
         "idxbx_0": [
             0,
@@ -27,9 +27,7 @@
             3,
             4,
             5,
-            6,
-            7,
-            8
+            6
         ],
         "idxbx_e": [],
         "idxbxe_0": [
@@ -39,52 +37,42 @@
             3,
             4,
             5,
-            6,
-            7,
-            8
+            6
         ],
         "idxsbu": [],
         "idxsbx": [],
         "idxsbx_e": [],
         "idxsg": [],
         "idxsg_e": [],
-        "idxsh": [
-            0,
-            1
-        ],
+        "idxsh": [],
         "idxsh_0": [],
         "idxsh_e": [],
         "idxsphi": [],
         "idxsphi_0": [],
         "idxsphi_e": [],
         "lbu": [
-            0.001,
+            0.1,
             -10000.0,
-            -10000.0
+            -1000.0
         ],
         "lbx": [
             0.0,
-            0.08,
-            -0.6
+            -0.1,
+            -0.5
         ],
         "lbx_0": [
+            -1.4760691534767292,
+            -4.0574010064385195,
+            4.734037492610018,
+            -0.5,
+            -9.845580752572514e-09,
             0.1,
-            0.0,
-            0.7853981633974483,
-            0.1,
-            0.0,
-            0.0,
-            0.01,
-            0.3,
             0.0
         ],
         "lbx_e": [],
         "lg": [],
         "lg_e": [],
-        "lh": [
-            -1,
-            -1
-        ],
+        "lh": [],
         "lh_0": [],
         "lh_e": [],
         "lphi": [],
@@ -95,43 +83,35 @@
         "lsbx_e": [],
         "lsg": [],
         "lsg_e": [],
-        "lsh": [
-            0.0,
-            0.0
-        ],
+        "lsh": [],
         "lsh_0": [],
         "lsh_e": [],
         "lsphi": [],
         "lsphi_0": [],
         "lsphi_e": [],
         "ubu": [
-            8.0,
+            15.0,
             10000.0,
-            10000.0
+            1000.0
         ],
         "ubx": [
-            13.704497588128937,
-            0.3,
-            0.6
+            4.358498459229503,
+            -0.0,
+            0.5
         ],
         "ubx_0": [
+            -1.4760691534767292,
+            -4.0574010064385195,
+            4.734037492610018,
+            -0.5,
+            -9.845580752572514e-09,
             0.1,
-            0.0,
-            0.7853981633974483,
-            0.1,
-            0.0,
-            0.0,
-            0.01,
-            0.3,
             0.0
         ],
         "ubx_e": [],
         "ug": [],
         "ug_e": [],
-        "uh": [
-            1,
-            1
-        ],
+        "uh": [],
         "uh_0": [],
         "uh_e": [],
         "uphi": [],
@@ -142,10 +122,7 @@
         "usbx_e": [],
         "usg": [],
         "usg_e": [],
-        "ush": [
-            0.0,
-            0.0
-        ],
+        "ush": [],
         "ush_0": [],
         "ush_e": [],
         "usphi": [],
@@ -163,16 +140,10 @@
         "W": [],
         "W_0": [],
         "W_e": [],
-        "Zl": [
-            100000,
-            100000
-        ],
+        "Zl": [],
         "Zl_0": [],
         "Zl_e": [],
-        "Zu": [
-            100000,
-            100000
-        ],
+        "Zu": [],
         "Zu_0": [],
         "Zu_e": [],
         "cost_ext_fun_type": "casadi",
@@ -184,16 +155,10 @@
         "yref": [],
         "yref_0": [],
         "yref_e": [],
-        "zl": [
-            50000,
-            50000
-        ],
+        "zl": [],
         "zl_0": [],
         "zl_e": [],
-        "zu": [
-            50000,
-            50000
-        ],
+        "zu": [],
         "zu_0": [],
         "zu_e": []
     },
@@ -205,12 +170,12 @@
         "N": 15,
         "nbu": 3,
         "nbx": 3,
-        "nbx_0": 9,
+        "nbx_0": 7,
         "nbx_e": 0,
-        "nbxe_0": 9,
+        "nbxe_0": 7,
         "ng": 0,
         "ng_e": 0,
-        "nh": 2,
+        "nh": 0,
         "nh_0": 0,
         "nh_e": 0,
         "np": 0,
@@ -220,7 +185,7 @@
         "nr": 0,
         "nr_0": 0,
         "nr_e": 0,
-        "ns": 2,
+        "ns": 0,
         "ns_0": 0,
         "ns_e": 0,
         "nsbu": 0,
@@ -228,14 +193,14 @@
         "nsbx_e": 0,
         "nsg": 0,
         "nsg_e": 0,
-        "nsh": 2,
+        "nsh": 0,
         "nsh_0": 0,
         "nsh_e": 0,
         "nsphi": 0,
         "nsphi_0": 0,
         "nsphi_e": 0,
         "nu": 3,
-        "nx": 9,
+        "nx": 7,
         "ny": 0,
         "ny_0": 0,
         "ny_e": 0,
@@ -243,7 +208,7 @@
     },
     "json_file": "acados_c_generated/acados_ocp_0.json",
     "model": {
-        "con_h_expr": "@1=(((52.4282*d)-(5.2465*vxi))-(1.1194*sign(vxi))), vertcat(((sq(@1)/10000)+(sq((41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))))/144)), ((sq(@1)/10000)+(sq((29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))))/144)))",
+        "con_h_expr": null,
         "con_h_expr_0": null,
         "con_h_expr_e": null,
         "con_phi_expr": null,
@@ -258,8 +223,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.4*thetadot))+(0.005*fabs(ddot)))+(0.4*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=vertcat(x, y), (((((200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, (-jac_traj(thetahat, 00){0}))', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1))))+(200*sq(dot(horzcat(jac_traj(thetahat, 00){0}, jac_traj(thetahat, 00){0})', (horzcat(traj(thetahat){0}, traj(thetahat){0})'-@1)))))-(2.4*thetadot))+(0.005*fabs(ddot)))+(0.4*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.1*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.1*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,
@@ -279,25 +244,25 @@
         "dyn_disc_fun_jac_hess": null,
         "dyn_ext_fun_type": "casadi",
         "dyn_generic_source": null,
-        "f_expl_expr": "@1=(((52.4282*d)-(5.2465*vxi))-(1.1194*sign(vxi))), @2=(41.7372*(delta-atan2((veta+(0.163*omega)),(0.0001+vxi)))), @3=(29.4662*atan2(((0.168*omega)-veta),(0.0001+vxi))), vertcat(((vxi*cos(phi))-(veta*sin(phi))), ((vxi*sin(phi))+(veta*cos(phi))), omega, (0.344828*(((@1+(@1*cos(delta)))-(@2*sin(delta)))+((2.9*veta)*omega))), (0.344828*(((@3+(@1*sin(delta)))+(@2*cos(delta)))-((2.9*vxi)*omega))), (12.5628*((((0.163*@2)*cos(delta))+((0.163*@1)*sin(delta)))-(0.168*@3))), thetadot, ddot, deltadot)",
+        "f_expl_expr": "vertcat((v*cos(phi)), (v*sin(phi)), ((v/0.331)*tan(delta)), (0.675676*(((61.4282*d)-(3.012*v))-(0.604*sign(v)))), thetahatdot, ddot, deltadot)",
         "f_impl_expr": null,
         "gnsf": {
             "nontrivial_f_LO": 1,
             "purely_linear": 0
         },
-        "name": "f1tenth_bicycle_model",
+        "name": "f1tenth_bicycle_model_reverse",
         "nu_original": null,
         "p": "0x0",
         "t": [],
         "t_label": "t",
-        "u": "vertcat(thetadot, ddot, deltadot)",
+        "u": "vertcat(thetahatdot, ddot, deltadot)",
         "u_labels": null,
-        "x": "vertcat(x, y, phi, vxi, veta, omega, thetahat, d, delta)",
+        "x": "vertcat(x, y, phi, v, thetahat, d, delta)",
         "x_labels": null,
-        "xdot": "vertcat(xdot, ydot, phidot, vxidot, vetadot, omegadot, thetadot, ddot, deltadot)",
+        "xdot": "vertcat(xdot, ydot, phi, a, thetahatdot, ddot, deltadot)",
         "z": "0x0"
     },
-    "name": "f1tenth_bicycle_model",
+    "name": "f1tenth_bicycle_model_reverse",
     "parameter_values": [],
     "problem_class": "OCP",
     "shared_lib_ext": ".so",

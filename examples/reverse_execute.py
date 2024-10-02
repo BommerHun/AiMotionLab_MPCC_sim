@@ -21,7 +21,7 @@ from aimotion_f1tenth_simulator.classes.mpcc_util.mpcc_reverse import mpcc_rever
 from matplotlib.collections import LineCollection
 
 reversed = True
-GUI = False # if True the simulator window will be visible, if False the simulator will run in the background 
+GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 trajectory = "null_infinity"
 
 if trajectory == "null_infinity" or trajectory == "null_paperclip":
@@ -32,12 +32,6 @@ elif trajectory =="slalom":
 
 
 
-paperclip_forward()
-paperclip_backward()
-paperclip_forward(mirror=True)
-paperclip_backward(mirror= True)
-
-input("delete test!!!!")
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
 BLUE_COLOR = "0.2 0.2 0.85 1.0"

@@ -26,7 +26,7 @@ parameter_server:
         #Input constraints
         delta_max: 0.5 # [rad]
         d_max: 0.1
-        d_min: 0.05      
+        d_min: 0.00      
         opt_tol: 0.01
         #Incremental input constraints        
 
@@ -37,14 +37,14 @@ parameter_server:
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 28 #number of shooting nodes
-        Tf: 0.7 #[s] time lenght of the opt. horizon
+        N: 15 #number of shooting nodes
+        Tf: 0.75 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 60.0
-        q_long: 100.0
-        q_theta: 1.5
+        q_long: 200.0
+        q_theta: 1.1
         q_d: 0.25
-        q_delta: 0.25
+        q_delta: 0.5
 
     crazy_observer:
       CUTOFF: 60.5
