@@ -57,16 +57,16 @@
         ],
         "lbx": [
             0.0,
-            -0.1,
+            -0.15,
             -0.5
         ],
         "lbx_0": [
-            -1.4760691534767292,
-            -4.0574010064385195,
-            4.734037492610018,
+            -1.407585801746246,
+            -4.2709961780284615,
+            4.790293590472126,
             -0.5,
-            -9.845580752572514e-09,
-            0.1,
+            -9.853305003695734e-09,
+            0.15,
             0.0
         ],
         "lbx_e": [],
@@ -100,12 +100,12 @@
             0.5
         ],
         "ubx_0": [
-            -1.4760691534767292,
-            -4.0574010064385195,
-            4.734037492610018,
+            -1.407585801746246,
+            -4.2709961780284615,
+            4.790293590472126,
             -0.5,
-            -9.845580752572514e-09,
-            0.1,
+            -9.853305003695734e-09,
+            0.15,
             0.0
         ],
         "ubx_e": [],
@@ -223,8 +223,8 @@
         "cost_conl_custom_outer_hess": null,
         "cost_conl_custom_outer_hess_0": null,
         "cost_conl_custom_outer_hess_e": null,
-        "cost_expr_ext_cost": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.1*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
-        "cost_expr_ext_cost_0": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.1*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
+        "cost_expr_ext_cost": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.3*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
+        "cost_expr_ext_cost_0": "@1=jac_traj(thetahat, 00){0}, @2=jac_traj(thetahat, 00){0}, @3=horzcat(traj(thetahat){0}, traj(thetahat){0})', @4=vertcat(x, y), (((((60*sq(dot(horzcat(@1, (-@2))', (@3-@4))))+(200*sq(dot(horzcat(@2, @1)', (@3-@4)))))-(1.3*thetahatdot))+(0.25*fabs(ddot)))+(0.5*fabs(deltadot)))",
         "cost_expr_ext_cost_custom_hess": null,
         "cost_expr_ext_cost_custom_hess_0": null,
         "cost_expr_ext_cost_custom_hess_e": null,

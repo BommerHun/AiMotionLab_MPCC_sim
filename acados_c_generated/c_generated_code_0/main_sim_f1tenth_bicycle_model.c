@@ -81,7 +81,7 @@ int main()
     x_current[4] = 0;
     x_current[5] = 0;
     x_current[6] = 0.01;
-    x_current[7] = 0.3;
+    x_current[7] = 0.4;
     x_current[8] = 0;
     
   

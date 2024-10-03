@@ -455,8 +455,8 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   w3 *= w4;
   /* #39: @0 = (@0-@3) */
   w0 -= w3;
-  /* #40: @3 = 0.005 */
-  w3 = 5.0000000000000001e-03;
+  /* #40: @3 = 0.05 */
+  w3 = 5.0000000000000003e-02;
   /* #41: @4 = input[1][1] */
   w4 = arg[1] ? arg[1][1] : 0;
   /* #42: @4 = fabs(@4) */

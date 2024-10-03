@@ -270,7 +270,7 @@ def main():
     car0_controller_reverse.set_trajectory(car0_trajectory_reverse.pos_tck, car0_trajectory_reverse.evol_tck, np.array([x[-1], y[-1], phi[-1], 0,0,0]))
 
 
-    while( not (simulator.glfw_window_should_close()) and (car0_controller_reverse.finished == False)): # the loop runs until the window is closed
+    while( not (simulator.glfw_window_should_close()) and not (car0_controller_reverse.finished == True and abs(car0.get_state()["long_vel"] < 0.001))): # the loop runs until the window is closed
         if GUI:
             simulator.update()
         else:

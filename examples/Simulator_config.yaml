@@ -62,7 +62,7 @@ parameter_server:
         freq_limit: 0
         #Input constraints
         delta_max: 0.6 # [rad]
-        d_max: 0.3
+        d_max: 0.4
         d_min: 0.00       
         opt_tol: 0.001
         #Incremental input constraints        
@@ -80,7 +80,7 @@ parameter_server:
         q_con: 200.0
         q_long: 200.0
         q_theta: 2.4
-        q_d: 0.005
+        q_d: 0.05
         q_delta: 0.4
 
       GP_LPV_LQR:
