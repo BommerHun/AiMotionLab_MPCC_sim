@@ -56,14 +56,14 @@ parameter_server:
           - 0.0298
           - 0.0095
       MPCC:
-        mu_xi: 100
+        mu_xi: 1000
         mu_eta: 12
         res_limit: 1000000000.0
         freq_limit: 0
         #Input constraints
         delta_max: 0.6 # [rad]
-        d_max: 0.4
-        d_min: 0.00       
+        d_max: 0.3
+        d_min: 0.08       
         opt_tol: 0.001
         #Incremental input constraints        
 
@@ -77,11 +77,11 @@ parameter_server:
         N: 15 #number of shooting nodes
         Tf: 0.75 #[s] time lenght of the opt. horizon
         #Cost weights:
-        q_con: 200.0
-        q_long: 200.0
-        q_theta: 2.4
-        q_d: 0.05
-        q_delta: 0.4
+        q_con: 150.0
+        q_long: 150.0
+        q_theta: 2.1
+        q_d: 0.5
+        q_delta: 0.5
 
       GP_LPV_LQR:
         GP_TYPE: "RLS_SGP" # GRAD_SGP, RLS_SGP

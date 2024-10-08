@@ -1,4 +1,5 @@
 from aimotion_f1tenth_simulator.classes.controller_base import ControllerBase
+from aimotion_f1tenth_simulator.classes.mpcc_util.base_mpcc import Base_MPCC_Controller
 from aimotion_f1tenth_simulator.classes.mpcc_util.casadi_mpcc import Casadi_MPCC
 from aimotion_f1tenth_simulator.classes.mpcc_util.theta_opt import Theta_opt
 from aimotion_f1tenth_simulator.classes.traj_classes import Spline_2D
@@ -13,7 +14,7 @@ from scipy.integrate import ode
 r = 1
 
 
-class CarMPCCController(ControllerBase):
+class CarMPCCController(Base_MPCC_Controller):
     def __init__(self, vehicle_params: dict, MPCC_params: dict, mute = False, lin_tire = False, index = 0):
         """
         Init controller parameters
@@ -28,7 +29,7 @@ class CarMPCCController(ControllerBase):
         self.theta = 0.0
         self.theta_dot = 0.0
         self.s_start = 0.0
-        self.x0 = np.zeros((1,6))
+        self.x0 = np.zeros(6)
         self.c_t = 0
         self.input = np.array([self.MPCC_params["d_max"],0])
        
@@ -46,7 +47,7 @@ class CarMPCCController(ControllerBase):
 
         self.lin_tire = lin_tire #Flag for using linear tire force model
         self.alpha = 1
-        self.prev_state = np.array([])
+        self.prev_state = np.zeros(6)
 
 
     def load_parameters(self):
@@ -144,7 +145,7 @@ class CarMPCCController(ControllerBase):
         self.prev_state = x0
 
 
-        if self.theta >= self.trajectory.L*0.999:
+        if self.theta >= self.trajectory.L-0.05:
             errors = np.array([0.0, 0.0,0.0,float(self.theta), 0.0])
             u_opt = np.array([0,0])
             self.input = np.array([0,0])
@@ -234,81 +235,7 @@ class CarMPCCController(ControllerBase):
 
         return {"d": self.input[0], "delta": self.input[1]}
     
-    def controller_init(self):
-        """
-        Calculate intial guess for the state horizon.
-        """
-        if self.muted == False:
-            print("Casadi init started...")
-
-        X, v_U,U, theta, dtheta = self.casadi_solver.opti_step(self.x0) #Call casadi solver for optimal initial guess
-
-        x_0 = np.concatenate((self.x0, np.array([self.theta]), v_U[:,0]))
-        self.ocp_solver.set(0, "x", x_0)
-        u_0 = np.concatenate((U[:,0], np.array([dtheta[0]])))
-        self.ocp_solver.set(0, "u", u_0)
-
     
-        if self.muted == False:
-            print(f"x0: {x_0}")
-            print(f"u0: {u_0}")
-        states = np.array(np.reshape(x_0, (-1,1)))
-
-        if self.muted == False: 
-            print(f"___________{0}._________")
-            print(u_0)
-            print(x_0)
-
-        for i in range(self.parameters.N-1):
-            x = np.concatenate((X[:,i+1],np.array([theta[i+1]]), v_U[:,i+1]))
-            #x = np.reshape(x, (-1,1))
-            states = np.append(states, np.reshape(x,(-1,1)), axis = -1)
-            self.ocp_solver.set(i+1, "x", x)
-            if dtheta[i] <self.MPCC_params["thetahatdot_min"]:
-                dtheta[i] = self.MPCC_params["thetahatdot_min"]
-            u = np.concatenate((np.array([dtheta[i]]),U[:,i]))
-            self.ocp_solver.set(i, "u", u)
-            if self.muted == False:
-                print(f"___________{i+1}._________")
-                print(u)
-                print(x)
-
-        if self.muted == False:
-            plt.plot(states[0,:], states[1,:])
-            s = np.linspace(0,self.trajectory.L, 1000)
-            plt.plot(self.trajectory.spl_sx(s), self.trajectory.spl_sy(s))
-            plt.axis("equal")
-            plt.ion()
-            plt.show()
-        #Acados controller init: 
-        if self.muted == False:
-            print("Acados init started...")
-
-        
-        tol =   0.01
-        t = 0
-
-        self.ocp_solver.set(0, 'lbx', x_0)
-        self.ocp_solver.set(0, 'ubx', x_0)
-        self.ocp_solver.set(0, 'x', x_0)
-
-        
-        for i in range(1000):
-           
-            self.ocp_solver.solve()
-            res = self.ocp_solver.get_residuals()
-
-            t += self.ocp_solver.get_stats("time_tot")
-            num_iter = i+1
-            if max(res) < tol:
-                break #Tolerance limit reached
-            if i %50 ==0:
-                print(f"{i}. init itaration, residuals: {res}")
-        if self.muted == False:
-            print(f"Number of init iterations: {num_iter}")
-            print("")
-
-
 
     def _generate_model(self):
         """
@@ -453,7 +380,10 @@ class CarMPCCController(ControllerBase):
         return e_l
     
     def reset(self):
-        pass
+        """Reset acados model and ocp solver"""
+        self.model = None
+        self.ocp_solver = None
+        self.finished = False
 
     def train_GP_controllers(self, *args, **kwargs):
         raise NotImplementedError
@@ -539,35 +469,14 @@ class CarMPCCController(ControllerBase):
         return ocp_solver
     
 
-    def set_trajectory(self, pos_tck, evol_tck, x0):
+    def set_trajectory(self, pos_tck, evol_tck, generate_solver = True):
         """
-        Project vehicle onto new trajectory, and find optimal value of theta.
-        Evauletes the reference spline from the given spline tck, and converts it into a Spline2D instance.
-
-        :param pos_tck: array
-        :param evol_tck: array, not used
-        :param x0: initial state, used for initialising the controller
-        :param thetastart: float, starting arc lenght of the trajectory
+        Evaluete the reference spline from the given spline tck, and convert it into a Spline2D instance.
+        Args:
+            pos_tck(np.array): position spline
+            evol_tck(np.array): reference progress spline
+            generate_solver(bool): generate ocp solver
         """
-
-
-        #Find current theta
-        point = x0[:2] #Current position
-        theta_finder = Theta_opt(point=point,
-                                 window= np.array([0, 5]),
-                                 evol_tck= evol_tck,
-                                 pos_tck= pos_tck)
-        theta_start = theta_finder.solve() #Find current theta in the defined window
-        if theta_start < 0.01:
-            theta_start = 0.01
-        
-        self.theta = theta_start
-        self.s_start = theta_start
-        self.theta_dot = 0.0
-
-
-
-        
 
         #Transform ref trajectory
         t_end = evol_tck[0][-1]
@@ -586,49 +495,108 @@ class CarMPCCController(ControllerBase):
         self.trajectory.spl_sy = cs.interpolant("traj", "bspline", [s], y)
         self.trajectory.L = s[-1]
 
+        if generate_solver:
+            self.generate_solver()
 
-        # Set Forward or Backward mode
-        x,y,ang = self.trajectory.get_path_parameters_ang(theta_start)
-        if cs.fabs(x0[2]-ang) > cs.pi/2:
-            self.reverse = True
-        else:
-            self.reverse = False
-
-
+    def generate_solver(self):
+        """
+        Generate Acados and Casadi solvers. Previously generated solvers're  **deleted**
+        """
+        self.reset()
         self.load_parameters()
-
-        #Setting the starting state of the vehicle
-        self.prev_state = x0
-        self.x0 = x0 #The current position must be the initial condition
-        self.prev_phi = x0[2]
-        self.x0[5] = 0
-        self.x0[4] = 0
-        if self.x0[3] < 0.1*cs.sign(self.parameters.d_max):
-            self.x0[3] = 0.1 * cs.sign(self.parameters.d_max) #Give a small forward speed to make the problem feasable (or backward speed)
-
-
-
-
-        #Set initial input value
-        self.input = np.array([self.MPCC_params["d_max"],0])
-
+        self.input = np.array([self.parameters.d_max, 0])
         self.ocp_solver = self._generate_ocp_solver(self._generate_model())
         self.casadi_solver = Casadi_MPCC(MPCC_params=self.casadi_MPCC_params,
-                                         vehicle_param=self.vehicle_params,
-                                         dt = self.parameters.Tf/self.parameters.N,
-                                         q_c = self.parameters.q_con,
-                                         q_l= self.parameters.q_lat,
-                                         q_t = self.parameters.q_theta,
-                                         q_delta=self.parameters.q_delta,
-                                         q_d = self.parameters.q_d,
-                                         theta_0=self.theta,
-                                         input_0 = self.input,
-                                         trajectory=self.trajectory,
-                                         N = self.parameters.N,
-                                         x_0 = self.x0,
-                                         lin_tire= self.lin_tire)
-        self.controller_init()
+                                                vehicle_param=self.vehicle_params,
+                                                dt = self.parameters.Tf/self.parameters.N,
+                                                q_c = self.parameters.q_con,
+                                                q_l= self.parameters.q_lat,
+                                                q_t = self.parameters.q_theta,
+                                                q_delta=self.parameters.q_delta,
+                                                q_d = self.parameters.q_d,
+                                                theta_0=self.theta,
+                                                input_0 = self.input,
+                                                trajectory=self.trajectory,
+                                                N = self.parameters.N,
+                                                x_0 = self.x0)
 
+    def init_controller(self, x0):
+        """
+        Initialize the Acados SQP solver by solving the optimization problem with Casadi IPOPT
+        Args:
+            x0(np.array): Initial position of CoM"""
+
+
+        theta_finder = Theta_opt(point= x0,
+                              window= np.array([0,5]),
+                              trajectory= self.trajectory)
+        theta_start = theta_finder.solve() #Find current theta in the defined window
+
+
+
+        self.theta = theta_start
+        self.s_start = theta_start
+        self.theta_dot = 0.0
+
+        self.x0 = x0
+        self.prev_phi = self.x0[2]
+        if self.x0[3] < 0.3:
+            self.x0[3] = 0.3
+
+
+        self.input = np.array([self.MPCC_params["d_max"],0])
+
+        if self.trajectory == None:
+            raise Exception("No trajectory defined")
+        
+        if self.ocp_solver == None: #If the solver hasn't been generated generate it
+            self.generate_solver()
+
+        X, v_U,U, theta, dtheta = self.casadi_solver.opti_step(self.x0) #Call casadi solver for optimal initial guess
+
+        x_0 = np.concatenate((self.x0, np.array([self.theta]), v_U[:,0]))
+        self.ocp_solver.set(0, "x", x_0)
+        u_0 = np.concatenate((U[:,0], np.array([dtheta[0]])))
+        self.ocp_solver.set(0, "u", u_0)
+
+
+
+        print(f"x0: {x_0}")
+        print(f"u0: {u_0}")
+        
+        states = np.array(np.reshape(x_0, (-1,1)))
+
+        for i in range(self.parameters.N-1):
+            x = np.concatenate((X[:,i+1],np.array([theta[i+1]]), v_U[:,i+1]))
+            #x = np.reshape(x, (-1,1))
+            states = np.append(states, np.reshape(x,(-1,1)), axis = -1)
+            self.ocp_solver.set(i+1, "x", x)
+            if dtheta[i] <self.MPCC_params["thetahatdot_min"]:
+                dtheta[i] = self.MPCC_params["thetahatdot_min"]
+            u = np.concatenate((np.array([dtheta[i]]),U[:,i]))
+            self.ocp_solver.set(i, "u", u)
+            
+        
+
+
+        self.ocp_solver.set(0, 'lbx', x_0)
+        self.ocp_solver.set(0, 'ubx', x_0)
+        self.ocp_solver.set(0, 'x', x_0)
+
+        tol =   0.01
+        t = 0
+        for i in range(1000):
+           
+            self.ocp_solver.solve()
+            res = self.ocp_solver.get_residuals()
+
+            t += self.ocp_solver.get_stats("time_tot")
+            num_iter = i+1
+            if max(res) < tol:
+                break #Tolerance limit reached
+            if i %50 ==0:
+                print(f"{i}. init itaration, residuals: {res}")
+    
 
     def nonlin_dynamics(self,t, states, inputs):
         '''

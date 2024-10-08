@@ -170,12 +170,14 @@ def update_controller_type(state, setpoint, time, i):
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
 
-car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0)
+car0_controller.set_trajectory(pos_tck = car0_trajectory.pos_tck,
+                                evol_tck=  car0_trajectory.evol_tck,
+                                generate_solver= True)
 car0.set_controllers(car0_controllers)
 
 
 
-
+car0_controller.init_controller(x0=x0)
 
 #input()
 # start simulation and collect position data

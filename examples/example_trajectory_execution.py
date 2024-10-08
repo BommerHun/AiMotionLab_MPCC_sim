@@ -19,19 +19,16 @@ from scipy.interpolate import splev
 from matplotlib.collections import LineCollection
 
 
-reversed = False
 lin_tire = False
 GUI = True # if True the simulator window will be visible, if False the simulator will run in the background 
 trajectory = "null_infinity"
 
 if trajectory == "null_infinity" or trajectory == "null_paperclip":
-    x0 = np.array([0.1, 0.1,0.64424,-1.5,0,0])
+    x0 = np.array([0.1, 0.1,0.64424,0,0,0])
 elif trajectory =="slalom":
     x0 = np.array([0.0, 0.0,0,0,0,0])
 
 
-if reversed:
-    x0[2] = x0[2]+np.pi
 
 # color definitions for multiple cars
 RED_COLOR = "0.85 0.2 0.2 1.0"
@@ -170,9 +167,9 @@ def update_controller_type(state, setpoint, time, i):
 car0.set_update_controller_type_method(update_controller_type)
 car0.set_trajectory(car0_trajectory)
 
-car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, x0)
+car0_controller.set_trajectory(car0_trajectory.pos_tck, car0_trajectory.evol_tck, True)
 car0.set_controllers(car0_controllers)
-
+car0_controller.init_controller(x0)
 
 #Setting up the horizon plotter:
 

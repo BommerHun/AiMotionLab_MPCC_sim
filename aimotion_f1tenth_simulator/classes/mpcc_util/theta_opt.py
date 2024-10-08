@@ -5,11 +5,11 @@ from aimotion_f1tenth_simulator.classes.traj_classes import Spline_2D
 r = 1
 
 class Theta_opt:
-    def __init__(self, point: np.array, window: np.array, evol_tck, pos_tck):
+    def __init__(self, point: np.array, window: np.array, trajectory: Spline_2D):
         self.opti = None
         self.point = point
         self.window = window
-        self.trajectory = self.set_trajectory(evol_tck=evol_tck, pos_tck= pos_tck)
+        self.trajectory = trajectory
         self.__init_optimiser()
         
     def __init_optimiser(self):

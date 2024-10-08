@@ -92,8 +92,7 @@ def main():
     path, v = paperclip_forward(r = 1.5)
     car0_trajectory_forward.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 
-
-
+    
     #Reference trajectory points:
     
     forward_trajectory_markers = add_trajectory_markers(scene= scene,
@@ -105,7 +104,6 @@ def main():
                                                         color = ORANGE_COLOR,
                                                         size = 0.05)
     
-
     # saving the scene as xml so that the simulator can load it
     scene.save_xml(os.path.join(xml_path, save_filename))
 
@@ -137,13 +135,17 @@ def main():
 
 
 
-
-
-
     car0_controller_forward = CarMPCCController(vehicle_params= args_forward["vehicle_params"], mute = False, MPCC_params= args_forward["MPCC_params"])
     car0_controller_reverse = mpcc_reverse_controller(vehicle_params= args_reverse["vehicle_params"], MPCC_params= args_reverse["MPCC_params"])
+
+    car0_controller_forward.set_trajectory(car0_trajectory_forward.pos_tck, car0_trajectory_forward.evol_tck)
+    car0_controller_reverse.set_trajectory(car0_trajectory_reverse.pos_tck, car0_trajectory_reverse.evol_tck, True)
+
+
+    car0_controller_forward.init_controller(x0)
+
+    
     # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
-    car0_controllers = [car0_controller_forward]
     def update_controller_type(state, setpoint, time, i):
         return 0
 
@@ -152,9 +154,9 @@ def main():
     car0.set_update_controller_type_method(update_controller_type)
     car0.set_trajectory(car0_trajectory_forward)
 
-    car0_controller_forward.set_trajectory(car0_trajectory_forward.pos_tck, car0_trajectory_forward.evol_tck, x0)
+    
+    car0_controllers = [car0_controller_forward]
     car0.set_controllers(car0_controllers)
-
 
     #Setting up the horizon plotter:
 
@@ -166,7 +168,7 @@ def main():
 
     plotter.set_ref_traj(np.array(car0_controller_forward.trajectory.spl_sx(s_forw)), np.array(car0_controller_forward.trajectory.spl_sy(s_forw)))
 
-    plotter.show()
+    #plotter.show()
 
     x_ref, y_ref = (car0_controller_forward.trajectory.spl_sx(car0_controller_forward.theta),car0_controller_forward.trajectory.spl_sy(car0_controller_forward.theta))
     plotter.set_ref_point(np.array(float(x_ref)), np.array(float(y_ref)))
@@ -210,7 +212,6 @@ def main():
         else:
             simulator.update_()
     
-
         u_sim = np.append(u_sim, np.reshape(car0_controller_forward.input, (-1,1)), axis = 1)
         error = car0_controller_forward.get_errors()
         error = np.array([error["contouring"], error["longitudinal"], error["progress"], error["c_t"]])
@@ -218,7 +219,7 @@ def main():
         errors = np.append(errors, error, axis = 1)
 
         st = car0_controller_forward.prev_state
-        (x_ref, y_ref) = splev(car0_controller_forward.state_vector[6,:], car0_trajectory_forward.pos_tck)
+        (x_ref, y_ref) = splev(car0_controller_forward.theta, car0_trajectory_forward.pos_tck)
         plotter.set_ref_point(x_ref, y_ref)
 
 
@@ -265,10 +266,9 @@ def main():
         
        
 
-    
-    car0.set_controllers([car0_controller_reverse])
-    car0_controller_reverse.set_trajectory(car0_trajectory_reverse.pos_tck, car0_trajectory_reverse.evol_tck, np.array([x[-1], y[-1], phi[-1], 0,0,0]))
-
+    car0_controllers = [car0_controller_reverse]
+    car0.set_controllers(car0_controllers)
+    car0_controller_reverse.init_controller(np.array([x[-1], y[-1], phi[-1], 0,0,0]))
 
     while( not (simulator.glfw_window_should_close()) and not (car0_controller_reverse.finished == True and abs(car0.get_state()["long_vel"] < 0.001))): # the loop runs until the window is closed
         if GUI:
@@ -309,7 +309,11 @@ def main():
                 print(e)
 
         plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
+
         
+
+
+
     simulator.close()
 
     #Creating simulation result plots
@@ -393,6 +397,7 @@ def main():
     for ax in axs:
         ax.grid(True)
 
+    plt.ion()
     plt.tight_layout()
     plt.show()
 

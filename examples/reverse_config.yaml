@@ -26,7 +26,7 @@ parameter_server:
         #Input constraints
         delta_max: 0.5 # [rad]
         d_max: 0.15
-        d_min: 0.00      
+        d_min: 0.05      
         opt_tol: 0.01
         #Incremental input constraints        
 
@@ -41,9 +41,9 @@ parameter_server:
         Tf: 0.75 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 60.0
-        q_long: 200.0
+        q_long: 150.0
         q_theta: 1.3
-        q_d: 0.25
+        q_d: 0.05
         q_delta: 0.5
 
     crazy_observer:

@@ -2,13 +2,13 @@ from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 import casadi as cs
 import numpy as np
 from aimotion_f1tenth_simulator.classes.traj_classes import Spline_2D
-from aimotion_f1tenth_simulator.classes.controller_base import ControllerBase
 from aimotion_f1tenth_simulator.classes.mpcc_util.theta_opt import Theta_opt
 from scipy.interpolate import splev
 import matplotlib.pyplot as plt
+from aimotion_f1tenth_simulator.classes.mpcc_util.base_mpcc import Base_MPCC_Controller
 r= 1
 
-class mpcc_reverse_controller(ControllerBase):
+class mpcc_reverse_controller(Base_MPCC_Controller):
     """
     Controller for reverse driving of the F1TENTH vehicle using the kinematic bicycle model
     """
@@ -29,7 +29,7 @@ class mpcc_reverse_controller(ControllerBase):
         self.theta = 0.0
         self.theta_dot = 0.0
         self.s_start = 0.0
-        self.x0 = np.zeros((4,1))
+        self.x0 = np.zeros(4)
 
         self.c_t = 0
 
@@ -47,9 +47,9 @@ class mpcc_reverse_controller(ControllerBase):
         self.reverse = False #Reverse mode flag
 
         self.prev_state = np.array([])
-        self._load_parameters()
+        self.load_parameters()
 
-    def _load_parameters(self):
+    def load_parameters(self):
         """
         Function for loading the solver parameters from the class dictionary (MPCC_params(dict),vehicle_params(dict))
         """
@@ -268,29 +268,14 @@ class mpcc_reverse_controller(ControllerBase):
 
         return ocp_solver
 
-    def set_trajectory(self, pos_tck, evol_tck, x0):
+    def set_trajectory(self, pos_tck, evol_tck, generate_solver = True):
         """
-        Project vehicle onto new trajectory, and find optimal value of theta.  Evaluete the reference spline from the given spline tck, and convert it into a Spline2D instance.
-        Initialize controller with the intial state.
+        Evaluete the reference spline from the given spline tck, and convert it into a Spline2D instance.
         Args:
-            pos_tck: array
-            evol_tck: array, not used
-            x0: initial state, used for initialising the controller [1 x model.nx]
+            pos_tck(np.array): position spline
+            evol_tck(np.array): reference progress spline
+            generate_solver(bool): generate ocp solver
         """
-
-        #Calculating the shifted CoM:
-
-        shifted_CoM = np.array([x0[0]-cs.cos(x0[2])*self.parameters.l_r, x0[1]-cs.sin(x0[2])*self.parameters.l_r])
-
-        theta_finder = Theta_opt(point= shifted_CoM,
-                              window= np.array([0,5]),
-                              evol_tck= evol_tck,
-                              pos_tck= pos_tck)
-        theta_start = theta_finder.solve() #Find current theta in the defined window
-
-        self.theta = theta_start
-        self.s_start = theta_start
-        self.theta_dot = 0.0
 
         #Transform ref trajectory
         t_end = evol_tck[0][-1]
@@ -308,9 +293,51 @@ class mpcc_reverse_controller(ControllerBase):
         self.trajectory.spl_sx = cs.interpolant("traj", "bspline", [s], x)
         self.trajectory.spl_sy = cs.interpolant("traj", "bspline", [s], y)
         self.trajectory.L = s[-1]
+        if generate_solver == True:
+            self.generate_solver()
+
+    def generate_solver(self):
+        """
+        Generate Acados and Casadi solvers. Previously generated solvers're  **deleted**
+        """
+
+        self.reset()
+        self.load_parameters()
+        self.input = np.array([self.parameters.d_min, 0])
+        self.ocp_solver = self._generate_ocp_solver(self._generate_model())
+        self.casadi_solver = casadi_reverse_MPCC(MPCC_params=self.casadi_MPCC_params,
+                                                vehicle_param=self.vehicle_params,
+                                                dt = self.parameters.Tf/self.parameters.N,
+                                                q_c = self.parameters.q_con,
+                                                q_l= self.parameters.q_lat,
+                                                q_t = self.parameters.q_theta,
+                                                q_delta=self.parameters.q_delta,
+                                                q_d = self.parameters.q_d,
+                                                theta_0=self.theta,
+                                                input_0 = self.input,
+                                                trajectory=self.trajectory,
+                                                N = self.parameters.N,
+                                                x_0 = self.x0)
+
+    def init_controller(self, x0):
+        """
+        Initialize the Acados SQP solver by solving the optimization problem with Casadi IPOPT
+        Args:
+            x0(np.array): Initial position of CoM"""
+        shifted_CoM = np.array([x0[0]-cs.cos(x0[2])*self.parameters.l_r, x0[1]-cs.sin(x0[2])*self.parameters.l_r])
+
+        theta_finder = Theta_opt(point= shifted_CoM,
+                              window= np.array([0,5]),
+                              trajectory= self.trajectory)
+        theta_start = theta_finder.solve() #Find current theta in the defined window
 
 
-        self._load_parameters()
+        self.load_parameters()
+
+
+        self.theta = theta_start
+        self.s_start = theta_start
+        self.theta_dot = 0.0
 
         self.x0 = np.array([shifted_CoM[0], shifted_CoM[1], x0[2], x0[3]])
         self.prev_phi = self.x0[2]
@@ -320,8 +347,12 @@ class mpcc_reverse_controller(ControllerBase):
 
         self.input = np.array([self.MPCC_params["d_max"],0])
 
-        self.ocp_solver = self._generate_ocp_solver(self._generate_model())
-        self.casadi_solver = casadi_reverse_MPCC(MPCC_params=self.casadi_MPCC_params,
+        if self.trajectory == None:
+            raise Exception("No trajectory defined")
+        
+        if self.ocp_solver == None: #If the solver hasn't been generated generate it
+            self.ocp_solver = self._generate_ocp_solver(self._generate_model())
+            self.casadi_solver = casadi_reverse_MPCC(MPCC_params=self.casadi_MPCC_params,
                                          vehicle_param=self.vehicle_params,
                                          dt = self.parameters.Tf/self.parameters.N,
                                          q_c = self.parameters.q_con,
@@ -334,16 +365,6 @@ class mpcc_reverse_controller(ControllerBase):
                                          trajectory=self.trajectory,
                                          N = self.parameters.N,
                                          x_0 = self.x0)
-
-        self._controller_init()
-
-    def get_errors(self):
-        return self.errors
-    def _controller_init(self):
-        """
-        Calculate intial guess for the state horizon.
-        """
-        print("Casadi init started...")
 
         X, v_U,U, theta, dtheta = self.casadi_solver.opti_step(self.x0) #Call casadi solver for optimal initial guess
 
@@ -389,6 +410,9 @@ class mpcc_reverse_controller(ControllerBase):
                 break #Tolerance limit reached
             if i %50 ==0:
                 print(f"{i}. init itaration, residuals: {res}")
+    
+    def get_errors(self):
+        return self.errors
 
     def compute_control(self, x0, setpoint,time, **kwargs):
         """
@@ -413,7 +437,7 @@ class mpcc_reverse_controller(ControllerBase):
 
         self.prev_state = x0
 
-        if self.theta >= self.trajectory.L*0.999:
+        if self.theta >= self.trajectory.L-0.05:
             errors = np.array([0.0, 0.0,0.0,float(self.theta), 0.0])
             u_opt = np.array([0,0])
             self.input = np.array([0,0])
@@ -481,7 +505,10 @@ class mpcc_reverse_controller(ControllerBase):
     
     #Basic functions that are not implemented:
     def reset(self):
-        pass
+        """Reset acados model and ocp solver"""
+        self.model = None
+        self.ocp_solver = None
+        self.finished = False
 
     def train_GP_controllers(self, *args, **kwargs):
         raise NotImplementedError
