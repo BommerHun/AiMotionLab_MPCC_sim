@@ -381,7 +381,6 @@ class CarMPCCController(Base_MPCC_Controller):
     
     def reset(self):
         """Reset acados model and ocp solver"""
-        self.model = None
         self.ocp_solver = None
         self.finished = False
 
@@ -543,7 +542,7 @@ class CarMPCCController(Base_MPCC_Controller):
         if self.x0[3] < 0.3:
             self.x0[3] = 0.3
 
-
+        
         self.input = np.array([self.MPCC_params["d_max"],0])
 
         if self.trajectory == None:

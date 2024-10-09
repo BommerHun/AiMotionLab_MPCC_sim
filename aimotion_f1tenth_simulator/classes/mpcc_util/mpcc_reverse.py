@@ -344,7 +344,7 @@ class mpcc_reverse_controller(Base_MPCC_Controller):
         if self.x0[3] > -0.5:
             self.x0[3] = -0.5
 
-
+        self.x0[3] = 0
         self.input = np.array([self.MPCC_params["d_max"],0])
 
         if self.trajectory == None:
@@ -506,7 +506,6 @@ class mpcc_reverse_controller(Base_MPCC_Controller):
     #Basic functions that are not implemented:
     def reset(self):
         """Reset acados model and ocp solver"""
-        self.model = None
         self.ocp_solver = None
         self.finished = False
 

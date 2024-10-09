@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def paperclip_forward(r = 1.5, mirror = False):
     path_points = np.array([0,0])
     
-    t = np.linspace(0,1, 20)
+    t = np.linspace(0,1, 8)
 
     for i in range(np.shape(t)[0]):
         point = np.array([0+r*np.cos(np.pi/4)*t[i], 0+r*np.sin(np.pi/4)*t[i]])
@@ -14,7 +14,7 @@ def paperclip_forward(r = 1.5, mirror = False):
     path_points = path_points[1:-1, :]
     
     
-    alpha = np.linspace(-np.pi/4, np.pi, 20)
+    alpha = np.linspace(-np.pi/4, np.pi, 8)
     for i in range(np.shape(alpha)[0]):
         point = np.array([r*np.cos(alpha[i]), r*np.sin(alpha[i])+np.pow(2, 0.5)*r])
         path_points = np.vstack([path_points, point])

@@ -142,7 +142,6 @@ def main():
     car0_controller_reverse.set_trajectory(car0_trajectory_reverse.pos_tck, car0_trajectory_reverse.evol_tck, True)
 
 
-    car0_controller_forward.init_controller(x0)
 
     
     # add the controller to a list and define an update method: this is useful in case of multiple controllers and controller switching
@@ -157,6 +156,8 @@ def main():
     
     car0_controllers = [car0_controller_forward]
     car0.set_controllers(car0_controllers)
+
+    car0_controller_forward.init_controller(x0)
 
     #Setting up the horizon plotter:
 
@@ -309,9 +310,6 @@ def main():
                 print(e)
 
         plotter.update_plot(new_x = horizon[0,:], new_y = horizon[1,:])
-
-        
-
 
 
     simulator.close()
