@@ -92,7 +92,6 @@ def main():
     path, v = paperclip_forward(r = 1.5)
     car0_trajectory_forward.build_from_points_const_speed(path, path_smoothing=0.01, path_degree=4, const_speed=1.5)
 
-    
     #Reference trajectory points:
     
     forward_trajectory_markers = add_trajectory_markers(scene= scene,
@@ -112,7 +111,7 @@ def main():
 
 
 
-    control_step, graphics_step = 1/20, 1/20 # the car controller operates in 40 Hz by default
+    control_step, graphics_step = args_forward["MPCC_params"]["Tf"]/ args_forward["MPCC_params"]["N"], args_forward["MPCC_params"]["Tf"]/ args_forward["MPCC_params"]["N"] # the car controller operates in 40 Hz by default
     xml_filename = os.path.join(xml_path, save_filename)
 
 

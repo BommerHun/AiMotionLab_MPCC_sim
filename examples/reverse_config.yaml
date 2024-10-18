@@ -37,11 +37,11 @@ parameter_server:
 
         #Optimisation parameters:
         max_QP_iter: 5
-        N: 15 #number of shooting nodes
-        Tf: 0.75 #[s] time lenght of the opt. horizon
+        N: 20 #number of shooting nodes
+        Tf: 0.6 #[s] time lenght of the opt. horizon
         #Cost weights:
         q_con: 60.0
-        q_long: 150.0
+        q_long: 60.0
         q_theta: 1.3
         q_d: 0.05
         q_delta: 0.5

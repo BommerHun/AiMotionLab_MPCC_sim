@@ -479,7 +479,8 @@ class CarMPCCController(Base_MPCC_Controller):
 
         #Transform ref trajectory
         t_end = evol_tck[0][-1]
-        t_eval=np.linspace(0, t_end, 10000)
+        s_end = splev(t_end, evol_tck)
+        t_eval=np.linspace(0, t_end, int(s_end+1))
         s=splev(t_eval, evol_tck)
         (x,y) = splev(s, pos_tck)
 
